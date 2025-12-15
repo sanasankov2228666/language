@@ -1,0 +1,18 @@
+init b = 0;
+init a = 2;
+
+func abc(b, a)
+{
+    if (b - a)
+    {
+        b = 10;
+    }
+    else 
+    {
+        a = 5;
+    }
+
+    init k = a + b;
+
+    return k;
+}
