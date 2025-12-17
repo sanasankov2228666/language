@@ -20,8 +20,10 @@ while(0)
 
 #define UNREC -1
 
+#define GLOBAL 9
+
 #define MAX_FUNC_PARAMS 10
-#define MAX_VARS        1000
+#define MAX_VARS        100
 #define MAX_FUNCS       1000
 
 #define CUR_TOKEN data->tokens.arr[data->pos]
@@ -33,25 +35,57 @@ struct func
     char* vars_loc[MAX_FUNC_PARAMS] = {};
 };
 
-struct ast_data
+
+// ================================================= ОБЛАСТЬ ВИДИМОСТИ =========================================================
+
+#define BLOCK 10
+
+struct scope
 {
-    tokens_arr tokens = {};
-
-    char** vars       = NULL;
-    func*  funcs      = NULL;
-
-    size_t func_pos   = 0;
-    size_t vars_pos   = 0;
-
-    size_t pos        = 0;
+    char** table = NULL;
+    size_t var_count = 0;
+    size_t var_capacity = 0;
+    int area_type = GLOBAL; 
 };
 
 
-//-----------------------------------------------------ФУНКЦИИ-ЧТЕНИЯ-----------------------------------------------------------------------
+struct stack_scopes
+{
+    scope** scopes = NULL;
+    size_t size      = 0;
+    size_t capacity  = 0;
+    size_t cur_scope = 0;
+};
 
 
+LangErr_t stack_scopes_init (stack_scopes* stack, size_t capacity);
 
-//------------------------------------------------------------------------------------------------------------------------------------------
+LangErr_t scope_init (scope* sc, int area_type);
+
+LangErr_t enter_scope (struct stack_scopes* stack, int area_type);
+
+LangErr_t exit_scope (stack_scopes* stack);
+
+LangErr_t init_var (stack_scopes* stack, char* name);
+
+bool find_var(stack_scopes* stack, const char* name);
+
+LangErr_t stack_scopes_destroy(stack_scopes* stack);
+
+
+// =================================================== ГЛАВНЫЕ ФУНКЦИИ ========================================================
+
+
+struct ast_data
+{
+    tokens_arr tokens   = {};
+    stack_scopes scopes = {};
+
+    func*  funcs = NULL;
+    size_t func_pos = 0;
+
+    size_t pos = 0;
+};
 
 
 node_t*   ReadTree (data_lexer* data_lex);
@@ -107,6 +141,14 @@ node_t* GetVarAct    (ast_data* data);
 node_t* GetArgs      (ast_data* data);
 
 node_t* GetCall      (ast_data* data);
+
+
+// ================================================ ВЫВОД ДЕРЕВА В ФАЙЛ =========================================================
+
+
+LangErr_t PrintTreeFile (node_t* root);
+
+void PrintNode (node_t* root, FILE* stream);
 
 
 // ============================================================================================================================

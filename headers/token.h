@@ -17,6 +17,7 @@ struct type_lexem
 {
     int numb   = 0;
     const char* name = NULL;
+    const char* std_name = NULL;
     size_t len = 0;
 };
 
@@ -25,8 +26,62 @@ extern struct type_lexem key_words[];
 extern int LEX_NUM;
 
 // ================ ВСЕ ТОКЕНЫ ====================
-enum tokens
-{
+// enum tokens
+// {
+//     IF = 1,
+//     ELSE,
+//     WHILE,
+//     FUNC,
+//     RETURN,
+//     INIT,
+    
+//     EQ,
+//     BIGR,
+//     SMLR,
+//     EBIGR,
+//     ESMLR,
+//     EQEQ,
+//     NEQ,
+    
+//     L_PAR,
+//     R_PAR,
+//     L_BR,
+//     R_BR,
+//     L_SBR,
+//     R_SBR,
+//     SEMIC,
+//     COMMA,
+//     COLON,
+//     DOT,
+    
+//     ADD,
+//     SUB,
+//     MUL,
+//     DIV,
+//     POW,
+    
+//     SIN,
+//     COS,
+//     TG,
+//     CTG,
+//     LN,
+//     LOG,
+//     SH,
+//     CH,
+//     ARSIN,
+//     ARCOS,
+//     ARTG,
+//     ARCTG,
+//     EXP,
+//     TH,
+//     CTH,
+
+//     AND,
+//     OR,
+// };
+
+
+enum {
     IF = 1,
     ELSE,
     WHILE,
@@ -46,37 +101,16 @@ enum tokens
     R_PAR,
     L_BR,
     R_BR,
-    L_SBR,
-    R_SBR,
     SEMIC,
     COMMA,
-    COLON,
-    DOT,
     
     ADD,
     SUB,
     MUL,
     DIV,
-    POW,
     
-    SIN,
-    COS,
-    TG,
-    CTG,
-    LN,
-    LOG,
-    SH,
-    CH,
-    ARSIN,
-    ARCOS,
-    ARTG,
-    ARCTG,
-    EXP,
-    TH,
-    CTH,
-
     AND,
-    OR,
+    OR
 };
 
 
@@ -101,6 +135,8 @@ struct data_lexer
 
     size_t line      = 1;
     size_t column    = 1;
+
+    int error = 0;
 };
 
 // ======================================================= ОСНОВНЫЕ ФУНКЦИИ ==========================================================

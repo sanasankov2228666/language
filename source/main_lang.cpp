@@ -1,6 +1,6 @@
 #include "tree.h"
 #include "graphic_dump.h"
-#include "readtree.h"
+#include "grammar.h"
 #include "token.h"
 
 int main()
@@ -8,6 +8,11 @@ int main()
     FILE* fp = file_opener (stderr, "example.txt", "r");   
 
     data_lexer data = Tokenization(fp);
+    if (data.error)
+    {
+        TokenArrayFree(&data.tokens);
+        return 1;
+    }
     
     DebugTokens(&data.tokens);
 
@@ -17,6 +22,7 @@ int main()
     tree_data.root = ReadTree (&data);
 
     tree_dump (&tree_data, "check");
+    PrintTreeFile (tree_data.root);
 
     TokenArrayFree(&data.tokens);
     

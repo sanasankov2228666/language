@@ -1,18 +1,15 @@
-init b = 0;
-init a = 2;
+craft factorial with n components
+begin
+    spawn res is 1 bedrock
+    spawn i is 1 bedrock
+    
+    repeater with i at_most n components
+    begin
+        res is res entchar i bedrock
+        i is i stack 1 bedrock
+    end
+    
+    result res bedrock
+end
 
-func abc(b, a)
-{
-    if (b - a)
-    {
-        b = 10;
-    }
-    else 
-    {
-        a = 5;
-    }
-
-    init k = a + b;
-
-    return k;
-}
+spawn fact is factorial with 5 components bedrock
