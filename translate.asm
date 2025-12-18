@@ -1,0 +1,67 @@
+:factorial
+PUSH 0
+POPREG AX
+POPM [AX]
+
+;Инцилизация переменной
+PUSH 1
+POPREG AX
+PUSH 1
+POPM [AX]
+
+
+;Инцилизация переменной
+PUSH 2
+POPREG AX
+PUSH 1
+POPM [AX]
+
+:while_start1
+PUSH 2
+POPREG AX
+PUSHM [AX]
+PUSH 0
+POPREG AX
+PUSHM [AX]
+PUSH 0
+POPREG CX
+JB :false1
+PUSH 1
+POPREG CX
+:false1
+PUSHREG CX
+PUSH 0
+JE :endwhile1
+PUSH 1
+POPREG AX
+PUSHM [AX]
+PUSH 2
+POPREG AX
+PUSHM [AX]
+MULT
+PUSH 1
+POPREG AX
+POPM [AX]
+PUSH 2
+POPREG AX
+PUSHM [AX]
+PUSH 1
+ADD
+PUSH 2
+POPREG AX
+POPM [AX]
+JUMP :while_start1
+:endwhile1
+PUSH 1
+POPREG AX
+PUSHM [AX]
+RET
+
+;Инцилизация переменной
+PUSH 0
+POPREG AX
+PUSH 5
+CALL :factorial
+POPM [AX]
+
+HLT

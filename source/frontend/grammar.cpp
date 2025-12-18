@@ -6,6 +6,7 @@
 #include "grammar.h"
 #include "config.h"
 #include "token.h"
+#include "lexems.h"
 
 
 // =============================================== ОСНОВНАЯ ФУНКЦИЯ ЧТЕНИЯ =====================================================
@@ -383,15 +384,15 @@ node_t* GetFunc (ast_data* data)
         return NULL;
     }
 
-    func_op->left  = connect1;
-    connect1->right = connect2;
+    connect1->left = func_op;
+    func_op->left  = name;
 
-    connect1->left = name;
-
+    func_op->right = connect2;
+    
     connect2->left  = params;
     connect2->right = body;
 
-    return func_op;
+    return connect1;
 }
 
 node_t* GetReturn(ast_data* data)
@@ -423,6 +424,7 @@ node_t* GetParams(ast_data* data)
     SYNTAX_ERROR(CUR_TOKEN->type != VAR);
     
     node_t* root = CUR_TOKEN;
+    node_t* old  = NULL;
 
     if (init_var(&data->scopes, CUR_TOKEN->val.var) != LN_OK)
     {
@@ -441,8 +443,6 @@ node_t* GetParams(ast_data* data)
         }
         
         SYNTAX_ERROR(CUR_TOKEN->type != OP || CUR_TOKEN->val.op != COMMA);
-        
-        node_t* comma = CUR_TOKEN;
         data->pos++;
         
         SYNTAX_ERROR(CUR_TOKEN->type != VAR);
@@ -457,10 +457,10 @@ node_t* GetParams(ast_data* data)
 
         data->pos++;
         
-        comma->left = root;
-        comma->right = next_param;
-        
-        root = comma;
+        if (!old) root->left = next_param;
+        else old->left = next_param;
+
+        old = next_param;
     }
     
     return root;
@@ -521,7 +521,6 @@ node_t* GetStatement (ast_data* data)
     }
     
     return root;  
-
 }
 
 node_t* GetIf (ast_data* data)
@@ -905,11 +904,11 @@ node_t* GetVarInit (ast_data* data)
     equal->left  = var;
     equal->right = expr;
 
-    semic->left = equal;
+    init->left = equal;
 
-    init->left = semic;
+    semic->left = init;
 
-    return init;
+    return semic;
 }
 
 node_t* GetVarAct (ast_data* data)
@@ -1023,42 +1022,41 @@ void PrintNode (node_t* root, FILE* stream)
         return;
     }
 
+    fprintf (stream, "(");
+    
     switch (root->type)
     {
     case OP:
-
-        fprintf (stream, "( oper: ");
-        fprintf (stream, " \"%s\" ", key_words[root->val.op - 1].std_name );
+        fprintf (stream, "op: ");
+        fprintf (stream, "\"%s\"", key_words[root->val.op - 1].std_name);
         break;
     
     case VAR:
-        
-        fprintf (stream, "( var: ");
-        fprintf (stream, " \"%s\" ", root->val.var);
+        fprintf (stream, "var: ");
+        fprintf (stream, "\"%s\"", root->val.var);
         break;
 
     case FUNCTION:
-        
-        fprintf (stream, "( func: ");
-        fprintf (stream, " \"%s\" ", root->val.var );
+        fprintf (stream, "func: ");
+        fprintf (stream, "\"%s\"", root->val.var);
         break;
 
     case NUM:
-        
-        fprintf (stream, "( num: ");
-        fprintf (stream, " \"%lg\" ", root->val.num );
+        fprintf (stream, "num: ");
+        fprintf (stream, "\"%d\"", root->val.num);
         break;
        
     case CONNECTION:
-
-        fprintf (stream, "( glue: ");
+        fprintf (stream, "cnct: ");
+        fprintf (stream, "\"cnct\"");
         break;
 
     default:
+        fprintf (stream, "unknown:");
         break;
     }
 
-    PrintNode (root->left,  stream);
+    PrintNode (root->left, stream);
     PrintNode (root->right, stream);
 
     fprintf (stream, ")");

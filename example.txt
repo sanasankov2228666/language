@@ -1,15 +1,15 @@
 craft factorial with n components
-begin
+workbench
+
     spawn res is 1 bedrock
     spawn i is 1 bedrock
     
-    repeater with i at_most n components
-    begin
+    mine with i at_most n components
+    workbench
         res is res entchar i bedrock
         i is i stack 1 bedrock
-    end
+    close
     
     result res bedrock
-end
-
+close
 spawn fact is factorial with 5 components bedrock

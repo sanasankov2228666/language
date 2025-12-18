@@ -3,7 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "graphic_dump.h"
-#include "token.h"
+#include "lexems.h"
 
 void dot_node_gen(node_t* root, FILE* dot_file, size_t* number)
 {
@@ -51,7 +51,7 @@ void dot_node_gen(node_t* root, FILE* dot_file, size_t* number)
             
 
         case NUM:
-            snprintf(data_buffer, sizeof(data_buffer), "%lg", root->val.num);
+            snprintf(data_buffer, sizeof(data_buffer), "%d", root->val.num);
             node_data = data_buffer;
             break;
             
@@ -78,6 +78,7 @@ void dot_node_gen(node_t* root, FILE* dot_file, size_t* number)
         *number, root->parent, type_str, node_data, root->left, root->right, fill_color);
 
     size_t current_number = (*number)++;
+    current_number = current_number;
     
     if (root->left != NULL)
     {
@@ -95,6 +96,8 @@ void dot_arrw_gen(node_t* root, FILE* dot_file, size_t* number, size_t parent_nu
     if (root == NULL) return;
 
     size_t current_number = (*number)++;
+
+    parent_number = parent_number;
 
     if (root->left != NULL)
     {

@@ -5,7 +5,6 @@
 
 // ----------------------------------------------------------ТОКЕНЫ----------------------------------------------------------------------
 
-#define UNREC_KEY -1
 
 #define ZERO_ARR 
 
@@ -13,17 +12,6 @@
 
 #define ERR_TOKEN -2
 
-struct type_lexem
-{
-    int numb   = 0;
-    const char* name = NULL;
-    const char* std_name = NULL;
-    size_t len = 0;
-};
-
-extern struct type_lexem key_words[];
-
-extern int LEX_NUM;
 
 // ================ ВСЕ ТОКЕНЫ ====================
 // enum tokens
@@ -80,38 +68,6 @@ extern int LEX_NUM;
 //     OR,
 // };
 
-
-enum {
-    IF = 1,
-    ELSE,
-    WHILE,
-    FUNC,
-    RETURN,
-    INIT,
-    
-    EQ,
-    BIGR,
-    SMLR,
-    EBIGR,
-    ESMLR,
-    EQEQ,
-    NEQ,
-    
-    L_PAR,
-    R_PAR,
-    L_BR,
-    R_BR,
-    SEMIC,
-    COMMA,
-    
-    ADD,
-    SUB,
-    MUL,
-    DIV,
-    
-    AND,
-    OR
-};
 
 
 // =========== СТРУКТУРА МАССИВА ТОКЕНОВ ============
@@ -171,17 +127,7 @@ node_t* ErrToken ();
 
 void SkipSpace (data_lexer* data);
 
-int SearchKeyWord(char* str);
-
 bool CheckFunc (data_lexer* data);
-
-
-// ====================================================== СТРОКОВЫЕ ФУНКЦИИ ============================================================
-
-
-size_t file_read(FILE* stream, char** buffer);
-
-long int size_file(FILE* stream);
 
 
 // ==================================================== ФУНКЦИИ БУФЕРА ТОКЕНОВ ==========================================================

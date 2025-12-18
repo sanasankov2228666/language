@@ -2,28 +2,44 @@ FLAGS = -D _DEBUG -ggdb3 -std=c++17 -O0 -Wall -Wextra -Weffc++ -Waggressive-loop
 
 INCLUDES = -I./headers
 
-FILES = $(wildcard source/*.cpp)
+OTHER_SRC = source/graphic_dump.cpp source/tree.cpp source/str_funcs.cpp source/lexems.cpp
 
-OUTPUT = program.exe
+FRONTEND_SRC = $(wildcard source/frontend/*.cpp)
+FILES_FRONTEND = $(FRONTEND_SRC) $(OTHER_SRC)
 
-all: lang
+BACKEND_SRC = $(wildcard source/backend/*.cpp)
+FILES_BACKEND = $(BACKEND_SRC) $(OTHER_SRC)
 
-lang: $(FILES)
-	@echo "=== Compiling lang ==="
-	g++ $(FLAGS) $(FILES) $(INCLUDES) -o $(OUTPUT)
+all: front
+
+front: $(FILES)
+	@echo "=== Compiling front ==="
+	g++ $(FLAGS) $(FILES_FRONTEND) $(INCLUDES) -o frontend.exe
 	@echo "=== Compilation complete ==="
 
-run-lang: lang
-	@echo "=== Running lang ==="
-	./$(OUTPUT)
+run-front: front
+	@echo "=== Running front ==="
+	./frontend.exe
+
+back: $(FILES)
+	@echo "=== Compiling back ==="
+	g++ $(FLAGS) $(FILES_BACKEND) $(INCLUDES) -o backend.exe
+	@echo "=== Compilation complete ==="
+
+run-back: back
+	@echo "=== Running back ==="
+	./backend.exe
 
 clean:
-	rm -f $(OUTPUT)
+	rm -f frontend.exe
+	rm -f backend.exe
 
 help:
 	@echo "Available commands:"
-	@echo "  make all       - compile lang (default)"
-	@echo "  make lang      - compile lang"
-	@echo "  make run-lang  - compile and run lang"
+	@echo "  make all       - compile front (default)"
+	@echo "  make front     - compile front"
+	@echo "  make run-front - compile and run front"
+	@echo "  make back      - compile and run back"
+	@echo "  make run-back  - compile and run back"		
 	@echo "  make clean     - remove compiled program"
 	@echo "  make help      - show this help"

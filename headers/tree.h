@@ -29,7 +29,7 @@ union tree_t
 {
     int  op;
     char*  var; 
-    double num;
+    int num;
 };
 
 // структруа узла
@@ -60,7 +60,7 @@ struct tree
 
 node_t* NodeCreator (FILE* log, int type, tree_t val, node_t* left, node_t* right);
 
-node_t* CreateNum(double value);
+node_t* CreateNum(int value);
 
 node_t* CreateVar(const char* name);
 

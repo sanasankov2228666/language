@@ -1,51 +1,14 @@
-#include "tree.h"
-#include "token.h"
-#include "config.h"
 #include <cstdint>
 #include <sys/stat.h>
 #include <assert.h>
 #include <ctype.h>
+#include "tree.h"
+#include "token.h"
+#include "lexems.h"
+#include "config.h"
+#include "str_funcs.h"
 
 // ===================================================== МАССИВ С ОПЕРАТОРАМИ ==========================================================
-
-
-struct type_lexem key_words[] =
-{
-    
-    {IF,     "observer" ,    "if",      8},
-    {ELSE,   "else"     ,    "else",    4},
-    {WHILE,  "repeater" ,    "while",   5},
-    {FUNC,   "craft"    ,    "func",    4},
-    {RETURN, "result"   ,    "return",  6},
-    {INIT,   "spawn"    ,    "init",    4},
-    
-
-    {EQ,     "is"        ,       "=",       1},
-    {BIGR,   "above"     ,       ">",       5},
-    {SMLR,   "less"      ,       "<",       4},
-    {EBIGR,  "at_most"   ,       ">=",      7},
-    {ESMLR,  "at_least"  ,       "<=",      8},
-    {EQEQ,   "same"      ,       "==",      4},
-    {NEQ,    "different" ,       "!=",      9},
-    
-
-    {L_PAR,  "with"       ,       "(",       4  },
-    {R_PAR,  "components" ,       ")",       10 },
-    {L_BR,   "begin"      ,       "{",       5  },
-    {R_BR,   "end"        ,       "}",       3  },
-    {SEMIC,  "bedrock"    ,       ";",       7  },
-    {COMMA,  "and"        ,       ",",       3  },
-    
-
-    {ADD,    "stack"   ,       "+",       5},
-    {SUB,    "unstack" ,       "-",         7},
-    {MUL,    "entchar" ,       "*",         7},
-    {DIV,    "split"   ,       "/",       5},
-    
-
-    {AND,    "redstone_and" ,      "&&",      12},
-    {OR,     "redstone_or"  ,      "||",      11},
-};
 
 
 // struct type_lexem key_words[] =
@@ -73,22 +36,6 @@ struct type_lexem key_words[] =
 //     {AND,    "&&",      2},  {OR,     "||",      2},
 // };
 
-
-int LEX_NUM = sizeof(key_words) / sizeof(key_words[0]);
-
-
-int SearchKeyWord (char* str)
-{
-    int check = 1;
-    for (int i = 0; i < LEX_NUM; i++)
-    {
-        check = strcmp( str , key_words[i].name);
-        if (check == 0) return (int) i;
-    }
-    
-
-    return UNREC_KEY;
-}
 
 // ===================================================================================================================================
 
@@ -314,7 +261,7 @@ node_t* ProcessingNum (data_lexer* data)
     char* start = data->current_pos;
     char* end = NULL;
 
-    token->val.num = strtod(start, &end);
+    token->val.num = (int) strtod(start, &end);
     
     size_t len = size_t (end - start);
     data->current_pos = end;
@@ -523,48 +470,6 @@ bool CheckFunc(data_lexer* data)
     return false;
 }
 
-// ======================================================= СТРОКОВЫЕ ФУНКЦИИ =========================================================
-
-
-//!чтение в один большой массив
-size_t file_read(FILE* stream, char** buffer)
-{
-    size_t number = (size_t) size_file(stream);
-
-    *buffer = (char*) calloc ((number + 2), sizeof(**buffer));
-    if (*buffer == NULL)
-    {
-        printf("error in file read\n");
-        return 1;
-    }
-
-    size_t check = fread(*buffer, sizeof(char), (size_t)number, stream);
-    if (check != number)
-    {
-        printf("error in fread\n");
-        return 1;
-    }
-
-    return (size_t)number;
-}
-
-
-//!количетсво символов
-long int size_file(FILE* stream)
-{
-    assert(stream != NULL);
-    if (stream == NULL)
-    {
-        printf("error in size_file stream adres\n");
-    }
-
-    struct stat file = {};
-    int descriptor = fileno(stream);
-    fstat(descriptor, &file);
-    
-    return file.st_size;
-}
-
 
 //================================================== ФУНКЦИИ БУФЕРА ТОКЕНОВ =============================================================
 
@@ -693,7 +598,7 @@ void DebugTokens(const tokens_arr* tokens)
                 break;
                 
             case NUM:
-                printf("NUM  %lg\n", t->val.num);
+                printf("NUM  %d\n", t->val.num);
                 break;
                 
             case VAR:

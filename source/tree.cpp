@@ -25,7 +25,7 @@ node_t* NodeCreator (FILE* log, int type, tree_t val, node_t* left, node_t* righ
         return node;
     }
 
-    else if (type == VAR)
+    else if (type == VAR || type == FUNCTION)
     {
         node->type    = type;
         node->val.var = val.var;
@@ -40,13 +40,20 @@ node_t* NodeCreator (FILE* log, int type, tree_t val, node_t* left, node_t* righ
         return node;
     }
 
+    else if (type == CONNECTION)
+    {
+        node->type    = type;
+        return node;
+    }
+
+
     DBG( log, "type doesnt exist\n");
     free(node);
 
     return NULL;
 }
 
-node_t* CreateNum(double value)
+node_t* CreateNum(int value)
 {
     tree_t val = {.num = value};
     return NodeCreator(stderr, NUM, val, NULL, NULL);
@@ -115,8 +122,11 @@ void deleter (node_t* root)
     deleter(root->left);
     deleter(root->right);
     
-    if (root->type == VAR)
-        free(root->val.var);
+    if ( root->type == VAR     ||
+         root->type == FUNCTION ) 
+    {   
+         free(root->val.var);
+    }
 
     free(root);
 }
