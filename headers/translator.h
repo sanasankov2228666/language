@@ -27,6 +27,12 @@ int check_type (const char* str);
 
 LangErr_t TranslateTree     (node_t* root, const char* filename);
 
+LangErr_t CompileOnlyFunc   (node_t* node, FILE* asm_file, stack_scopes* stack);
+
+LangErr_t CompileNotFunc    (node_t* node, FILE* asm_file, stack_scopes* stack);
+
+LangErr_t TranslateNodeSpecial (node_t* node, FILE* asm_file, stack_scopes* stack);
+
 LangErr_t TranslateNode     (node_t* node, FILE* asm_file, stack_scopes* stack);
 
 LangErr_t TranslateOp       (node_t* node, FILE* asm_file, stack_scopes* stack);

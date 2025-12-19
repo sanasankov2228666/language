@@ -1,15 +1,12 @@
 craft factorial with n components
 workbench
-
-    spawn res is 1 bedrock
-    spawn i is 1 bedrock
-    
-    mine with i at_most n components
+    observer with n same 0 components
     workbench
-        res is res entchar i bedrock
-        i is i stack 1 bedrock
+        result 1 bedrock
     close
     
-    result res bedrock
+    spawn prev is factorial with n unstack 1 components bedrock
+    result n entchar prev bedrock
 close
-spawn fact is factorial with 5 components bedrock
+
+spawn x is factorial with 5 components bedrock
