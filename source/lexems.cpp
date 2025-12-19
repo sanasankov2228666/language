@@ -14,6 +14,7 @@ struct type_lexem key_words[] =
     {FUNC,   "craft"    ,    "func"   ,    4},
     {RETURN, "result"   ,    "return" ,    6},
     {INIT,   "spawn"    ,    "init"   ,    4},
+    {PRINT,  "print"    ,    "print"  ,    5},
     
 
     {EQ,     "is"        ,       "=",       1},

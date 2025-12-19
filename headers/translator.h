@@ -11,8 +11,11 @@ if (cond)\
     return NULL;\
 }\
 
-#define CMP_REG "CX"
 #define ADR_REG "AX"
+#define BASE_REG "BX"
+#define CMP_REG "CX"
+#define VAR_REG "DX"
+#define VAR_REG "FX"
 
 
 node_t* read_tree (FILE* stream);
@@ -46,6 +49,8 @@ LangErr_t TranslateIf       (node_t* node, FILE* asm_file, stack_scopes* stack);
 LangErr_t TranslateWhile    (node_t* node, FILE* asm_file, stack_scopes* stack);
 
 LangErr_t TranslateReturn   (node_t* node, FILE* asm_file, stack_scopes* stack);
+
+LangErr_t TranslatePrint    (node_t* node, FILE* asm_file, stack_scopes* stack);
 
 LangErr_t TranslateVarInit  (node_t* node, FILE* asm_file, stack_scopes* stack);
 

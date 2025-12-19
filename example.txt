@@ -1,12 +1,11 @@
 craft factorial with n components
 workbench
-    observer with n same 0 components
+    observer with n at_least 5 components
     workbench
         result 1 bedrock
     close
-    
-    spawn prev is factorial with n unstack 1 components bedrock
-    result n entchar prev bedrock
+    result n entchar factorial with n unstack 1 components bedrock
 close
 
-spawn x is factorial with 5 components bedrock
+spawn fact is factorial with 5 components bedrock
+print with fact components bedrock

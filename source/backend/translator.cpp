@@ -179,18 +179,7 @@ LangErr_t TranslateTree(node_t* root, const char* filename)
     if (!asm_file) return LN_ERR;
 
     fprintf(asm_file, "JUMP :main\n\n");
-    
-    fprintf(asm_file, "\n; ============== ФУНКЦИИ ===============\n");
-    if (CompileOnlyFunc (root, asm_file, &stack) != LN_OK)
-    {
-        stack_scopes_destroy(&stack);
-        fclose(asm_file);
-        return LN_ERR;
-    }
-    
-    fprintf(asm_file, "\n; ============== КОНЕЦ ФУНКЦИЙ ============\n\n");
 
-    fprintf(asm_file, "\n\n; ============ ГЛАВНАЯ ПРОГРАММА ============\n");
     fprintf(asm_file, ":main\n");
     
     if (CompileNotFunc (root, asm_file, &stack) != LN_OK)
@@ -199,11 +188,19 @@ LangErr_t TranslateTree(node_t* root, const char* filename)
         fclose(asm_file);
         return LN_ERR;
     }
-    
-    fprintf(asm_file, "\n; ================ КОНЕЦ ПРОГРАММЫ ================\n");
 
-    fprintf(asm_file, "\nHLT\n");
+    fprintf (asm_file, "JUMP :end_program\n");
     
+    if (CompileOnlyFunc (root, asm_file, &stack) != LN_OK)
+    {
+        stack_scopes_destroy(&stack);
+        fclose(asm_file);
+        return LN_ERR;
+    }
+    
+    fprintf (asm_file, ":end_program\n");
+    fprintf(asm_file, "\nHLT\n");
+
     stack_scopes_destroy(&stack);
     fclose(asm_file);
     return LN_OK;
@@ -383,7 +380,10 @@ LangErr_t TranslateOp(node_t* node, FILE* asm_file, stack_scopes* stack)
             return  TranslateWhile (node, asm_file, stack);
         case RETURN:
             return  TranslateReturn (node, asm_file, stack);
-            
+        case PRINT:
+            return TranslatePrint (node, asm_file, stack);
+
+
         case SEMIC:
             if (node->left)
                 TranslateNode (node->left, asm_file, stack);
@@ -491,14 +491,12 @@ LangErr_t TranslateIf (node_t* node, FILE* asm_file, stack_scopes* stack)
 
     TranslateCond (node->left, asm_file, stack);
 
-    fprintf (asm_file, "\n;Условный оператор\n");
-    fprintf (asm_file, "PUSH 0\n");
+    fprintf (asm_file, "\nPUSH 0\n");
     fprintf (asm_file, "JE :endif%d\n", if_count);
 
     TranslateNode (node->right, asm_file, stack);
 
-    fprintf (asm_file, ":endif%d\n", if_count);
-    fprintf(asm_file, "Условного оператора\n\n");
+    fprintf (asm_file, ":endif%d\n\n", if_count);
 
     exit_scope (stack);
 
@@ -512,7 +510,6 @@ LangErr_t TranslateWhile (node_t* node, FILE* asm_file, stack_scopes* stack)
  
     enter_scope (stack);
 
-    fprintf(asm_file, "\n;Цикл\n");
     fprintf(asm_file, ":while_start%d\n", while_count);
     
     TranslateCond (node->left, asm_file, stack);
@@ -524,9 +521,7 @@ LangErr_t TranslateWhile (node_t* node, FILE* asm_file, stack_scopes* stack)
     
     fprintf(asm_file, "JUMP :while_start%d\n", while_count);
 
-    fprintf (asm_file, ":endwhile%d\n", while_count);
-
-    fprintf(asm_file, ";Конец цикла\n\n");
+    fprintf (asm_file, ":endwhile%d\n\n", while_count);
 
     exit_scope (stack);
 
@@ -548,6 +543,25 @@ LangErr_t TranslateReturn (node_t* node, FILE* asm_file, stack_scopes* stack)
     return LN_OK;
 }
 
+
+LangErr_t TranslatePrint (node_t* node, FILE* asm_file, stack_scopes* stack)
+{
+     if (!node || !asm_file || !stack)
+    {
+        D_PRINT ("ERROR in func params\n");
+        return LN_ERR;
+    }
+
+    node_t* expr = node->left;
+
+    TranslateNode (expr, asm_file, stack);
+
+    fprintf (asm_file, "OUT\n");
+    
+    return LN_OK;
+}
+
+
 LangErr_t TranslateVarInit (node_t* node, FILE* asm_file, stack_scopes* stack)
 {
     if (!node || !asm_file || !stack)
@@ -564,7 +578,6 @@ LangErr_t TranslateVarInit (node_t* node, FILE* asm_file, stack_scopes* stack)
         return LN_ERR;
     }
 
-    fprintf (asm_file, "\n;Инцилизация переменной %s\n", param->val.var);
     fprintf (asm_file, "PUSH %d\n", adres);
     fprintf (asm_file, "POPREG %s\n", ADR_REG );
 
@@ -577,8 +590,6 @@ LangErr_t TranslateVarInit (node_t* node, FILE* asm_file, stack_scopes* stack)
 LangErr_t HelpFuncParamInit (stack_scopes* stack, char* name, FILE* asm_file)
 {
     int adres = init_var (stack, name);
-
-    fprintf (asm_file, "\n;Инцилизация параматра %s функции \n", name);
 
     fprintf (asm_file, "PUSH %d\n", adres);
     fprintf (asm_file, "POPREG %s\n", ADR_REG);
@@ -597,7 +608,6 @@ LangErr_t TranslateFunc (node_t* node, FILE* asm_file, stack_scopes* stack)
     }
 
     node_t* name = node->left;
-    fprintf (asm_file, "\n;Название функции\n");
     fprintf (asm_file, ":%s\n", name->val.var);
     
     enter_scope (stack);
@@ -629,9 +639,9 @@ LangErr_t TranslateVar(node_t* node, FILE* asm_file, stack_scopes* stack)
     int adres = get_var_address (stack, node->val.var);
 
     fprintf (asm_file, "PUSH %d\n", adres);
-    fprintf (asm_file, "POPREG %s\n", ADR_REG);
+    fprintf (asm_file, "POPREG %s\n", VAR_REG);
 
-    fprintf (asm_file, "PUSHM [%s]\n", ADR_REG);
+    fprintf (asm_file, "PUSHM [%s]\n", VAR_REG);
 
     return LN_OK;
 }
@@ -648,6 +658,8 @@ LangErr_t TranslateEq (node_t* node, FILE* asm_file, stack_scopes* stack)
 
     TranslateNode (node->right, asm_file, stack);
 
+    
+
     fprintf (asm_file, "PUSH %d\n", adres);
     fprintf (asm_file, "POPREG %s\n", ADR_REG);
 
@@ -659,23 +671,13 @@ LangErr_t TranslateEq (node_t* node, FILE* asm_file, stack_scopes* stack)
 LangErr_t TranslateCallFunc (node_t* node, FILE* asm_file, stack_scopes* stack)
 {
     if (!node || !asm_file || !stack)
-    {
-        D_PRINT ("ERROR in func params\n");
         return LN_ERR;
-    }
+    
 
-    node_t* params = node->left;
-
-    while (params != NULL)
-    {
-        if (!params->right) TranslateNode (params, asm_file, stack);
-        else TranslateNode (params->right, asm_file, stack);
-
-        params = params->left;
-    }
-
-    fprintf (asm_file, "\n;вызов функции\n");
-    fprintf (asm_file, "CALL :%s\n", node->val.var);
-
+    if (node->left)
+        TranslateNode(node->left, asm_file, stack);
+    
+    fprintf(asm_file, "CALL :%s\n", node->val.var);
+    
     return LN_OK;
 }

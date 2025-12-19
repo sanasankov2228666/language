@@ -486,6 +486,11 @@ node_t* GetStatement (ast_data* data)
         root = GetReturn (data);
     }
 
+    else if (CUR_TOKEN->type == OP && CUR_TOKEN->val.op == PRINT)
+    {
+        root = GetPrint (data);
+    }
+
     else if (CUR_TOKEN->type == FUNCTION)
     {
         root = GetCall (data);
@@ -605,6 +610,24 @@ node_t* GetWhile (ast_data* data)
     connection->left = root;
 
     return connection;
+}
+
+
+node_t* GetPrint (ast_data* data)
+{
+    node_t* print = CUR_TOKEN;
+    data->pos++;
+
+    node_t* exp = GetExpresion (data);
+
+    SYNTAX_ERROR (CUR_TOKEN->type != OP || CUR_TOKEN->val.op != SEMIC);
+    node_t* semic = CUR_TOKEN;
+    data->pos++;
+
+    semic->left = print;
+    print->left = exp;
+
+    return semic;
 }
 
 

@@ -25,6 +25,7 @@ enum {
     FUNC,
     RETURN,
     INIT,
+    PRINT,
     
     EQ,
     BIGR,
