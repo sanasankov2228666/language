@@ -107,14 +107,14 @@ LangErr_t enter_scope (stack_scopes* stack)
     stack->scopes[stack->size] = new_scope;
     stack->size++;
     stack->cur_scope = stack->size - 1;
-    
+
     return LN_OK;
 }
 
 
 int find_begin (stack_scopes* stack)
 {
-    int begin = 0;
+    int begin = 100;
 
     for (size_t i = 0; i < stack->size; i++)
     {
@@ -170,13 +170,13 @@ int init_var(stack_scopes* stack, char* name)
 {
     var result = find_var(stack, name);
 
-    if (result.adres == ERR_FIND)
+    if (result.offset == ERR_FIND)
     {
         D_PRINT("ERROR in find_var parameters\n");
         return -1;
     }
 
-    if (result.adres != N_EXIST)
+    if (result.offset != N_EXIST)
     {
         D_PRINT("ERROR, var - %s already exist\n", name);
         return -1;
@@ -190,22 +190,22 @@ int init_var(stack_scopes* stack, char* name)
         return -1;
     }
 
-    int adres = cur_scope->begin + (int) cur_scope->var_count;
+    int offset = (int) cur_scope->var_count;
 
     cur_scope->table[cur_scope->var_count].name  = name;
-    cur_scope->table[cur_scope->var_count].adres = adres;
+    cur_scope->table[cur_scope->var_count].offset = offset;
 
     cur_scope->var_count++;
-    return adres;
+    return offset;
 }
 
 
 var find_var(stack_scopes* stack, const char* name)
 {
-    var dont_exist   = {};
-    dont_exist.adres = N_EXIST;
-    var err   = {};
-    err.adres = ERR_FIND;
+    var dont_exist    = {};
+    dont_exist.offset = N_EXIST;
+    var err    = {};
+    err.offset = ERR_FIND;
 
     if (!stack || !name || stack->size == 0)
     {
@@ -233,19 +233,19 @@ int get_var_address(stack_scopes* stack, const char* name)
 {
     var result = find_var(stack, name);
     
-    if (result.adres == ERR_FIND)
+    if (result.offset == ERR_FIND)
     {
         D_PRINT("ERROR: invalid parameters\n");
         return -1;
     }
     
-    if (result.adres == N_EXIST)
+    if (result.offset == N_EXIST)
     {
         D_PRINT("ERROR: variable '%s' not found\n", name);
         return -1;
     }
     
-    return result.adres;
+    return result.offset;
 }
 
 
@@ -276,3 +276,5 @@ LangErr_t stack_scopes_destroy (stack_scopes* stack)
     
     return LN_OK;
 }
+
+

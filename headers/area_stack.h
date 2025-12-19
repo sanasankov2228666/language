@@ -11,7 +11,7 @@
 struct var
 {
     char* name = NULL;
-    int adres  = 0;
+    int offset  = 0;
 };
 
 struct scope
@@ -19,7 +19,7 @@ struct scope
     var* table = NULL;
     size_t var_count = 0;
     size_t var_capacity = 0;
-    int begin = 0;
+    int begin = 100;
 };
 
 

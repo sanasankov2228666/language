@@ -11,11 +11,11 @@ if (cond)\
     return NULL;\
 }\
 
-#define ADR_REG "AX"
+#define FREE_REG "AX"
 #define BASE_REG "BX"
 #define CMP_REG "CX"
 #define VAR_REG "DX"
-#define VAR_REG "FX"
+#define ADRES_REG "FX"
 
 
 node_t* read_tree (FILE* stream);
@@ -64,6 +64,9 @@ LangErr_t TranslateCallFunc (node_t* node, FILE* asm_file, stack_scopes* stack);
 
 LangErr_t HelpFuncParamInit (stack_scopes* stack, char* name, FILE* asm_file);
 
+void PrintEnterArea (FILE* asm_file);
+
+void PrintExitArea (FILE* asm_file);
 
 // =======================================================================================================================================
 
