@@ -37,6 +37,7 @@ LangErr_t stack_scopes_init (stack_scopes* stack, size_t capacity)
     }
     
     stack->scopes[stack->size++] = global_scope;
+    global_scope->begin = SYSTEM_ZONE;
     
     return LN_OK;
 }
@@ -74,6 +75,7 @@ LangErr_t enter_scope (stack_scopes* stack)
     if (stack->size >= stack->capacity)
     {
         size_t new_capacity = stack->capacity * 2;
+
         if (new_capacity == 0) new_capacity = 4;
         
         scope** new_scopes = (scope**) realloc ( 
@@ -85,7 +87,7 @@ LangErr_t enter_scope (stack_scopes* stack)
             return LN_ERR;
         }
 
-        stack->scopes = new_scopes;
+        stack->scopes   = new_scopes;
         stack->capacity = new_capacity;
     }
     
@@ -114,12 +116,10 @@ LangErr_t enter_scope (stack_scopes* stack)
 
 int find_begin (stack_scopes* stack)
 {
-    int begin = 100;
+    int begin = SYSTEM_ZONE;
 
     for (size_t i = 0; i < stack->size; i++)
-    {
         begin = begin + (int) stack->scopes[i]->var_count;
-    }
 
     return begin;
 }
@@ -147,7 +147,7 @@ LangErr_t exit_scope (stack_scopes* stack)
     stack->size--;
     stack->cur_scope = stack->size - 1;
     
-    if (stack->capacity > 8 && stack->capacity >= 4 * stack->size)
+    if (stack->capacity > 50 && stack->capacity >= 4 * stack->size)
     {
         size_t new_capacity = stack->capacity / 2;
         if (new_capacity < 4) new_capacity = 4;
@@ -168,84 +168,40 @@ LangErr_t exit_scope (stack_scopes* stack)
 
 int init_var(stack_scopes* stack, char* name)
 {
-    var result = find_var(stack, name);
+    scope* cur    = stack->scopes[stack->cur_scope];
 
-    if (result.offset == ERR_FIND)
-    {
-        D_PRINT("ERROR in find_var parameters\n");
-        return -1;
-    }
+    int result_cur   = find_var_in_area (cur , name);
 
-    if (result.offset != N_EXIST)
+    if (result_cur != N_EXIST)
     {
         D_PRINT("ERROR, var - %s already exist\n", name);
         return -1;
     }
-
-    scope* cur_scope = stack->scopes[stack->cur_scope];
     
-    if (cur_scope->var_count >= cur_scope->var_capacity)
+    if (cur->var_count >= cur->var_capacity)
     {
         D_PRINT("ERROR: scope table overflow\n");
         return -1;
     }
 
-    int offset = (int) cur_scope->var_count;
+    int offset = (int) cur->var_count;
 
-    cur_scope->table[cur_scope->var_count].name  = name;
-    cur_scope->table[cur_scope->var_count].offset = offset;
+    cur->table[ cur->var_count ].name   = name;
+    cur->table[ cur->var_count ].offset = offset;
 
-    cur_scope->var_count++;
+    cur->var_count++;
     return offset;
 }
 
-
-var find_var(stack_scopes* stack, const char* name)
+int find_var_in_area(scope* cur, const char* name)
 {
-    var dont_exist    = {};
-    dont_exist.offset = N_EXIST;
-    var err    = {};
-    err.offset = ERR_FIND;
-
-    if (!stack || !name || stack->size == 0)
+    for (int i = 0; i < (int) cur->var_count; i++)
     {
-        return err;
+        if ( strcmp(name, cur->table[i].name) == 0)
+            return i;
     }
-    
-    for (size_t scope_idx = stack->size; scope_idx > 0; scope_idx--)
-    {
-        scope* current_scope = stack->scopes[scope_idx - 1];
-        
-        for (size_t var_idx = 0; var_idx < current_scope->var_count; var_idx++)
-        {
-            char* var_name = current_scope->table[var_idx].name;
 
-            if (strcmp(var_name, name) == 0) 
-                return current_scope->table[var_idx];
-        }
-    }
-    
-    return dont_exist;
-}
-
-
-int get_var_address(stack_scopes* stack, const char* name)
-{
-    var result = find_var(stack, name);
-    
-    if (result.offset == ERR_FIND)
-    {
-        D_PRINT("ERROR: invalid parameters\n");
-        return -1;
-    }
-    
-    if (result.offset == N_EXIST)
-    {
-        D_PRINT("ERROR: variable '%s' not found\n", name);
-        return -1;
-    }
-    
-    return result.offset;
+    return N_EXIST;
 }
 
 
@@ -276,5 +232,3 @@ LangErr_t stack_scopes_destroy (stack_scopes* stack)
     
     return LN_OK;
 }
-
-

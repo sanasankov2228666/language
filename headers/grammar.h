@@ -114,6 +114,8 @@ node_t* GetWhile     (ast_data* data);
 
 node_t* GetPrint     (ast_data* data);
 
+node_t* GetIn        (ast_data* data);
+
 node_t* GetExpresion (ast_data* data);
 
 node_t* GetLogicAnd  (ast_data* data);

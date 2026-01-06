@@ -6,7 +6,8 @@
 
 #define MAX_VARS 1000
 #define N_EXIST -1
-#define ERR_FIND -2
+
+#define SYSTEM_ZONE 100
 
 struct var
 {
@@ -19,7 +20,7 @@ struct scope
     var* table = NULL;
     size_t var_count = 0;
     size_t var_capacity = 0;
-    int begin = 100;
+    int begin = SYSTEM_ZONE;
 };
 
 
@@ -44,9 +45,7 @@ LangErr_t exit_scope (stack_scopes* stack);
 
 int init_var (stack_scopes* stack, char* name);
 
-var find_var (stack_scopes* stack, const char* name);
-
-int get_var_address(stack_scopes* stack, const char* name);
+int find_var_in_area(scope* cur, const char* name);
 
 LangErr_t stack_scopes_destroy (stack_scopes* stack);
 

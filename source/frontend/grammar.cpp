@@ -50,7 +50,7 @@ LangErr_t AstDataInit (ast_data* data, data_lexer* data_lex)
 LangErr_t AstDataDeleter (ast_data* data)
 {
     free(data->funcs);
-
+ 
     stack_scopes_destroy(&data->scopes);
 
     data->pos = 0;
@@ -244,16 +244,13 @@ bool find_var(stack_scopes* stack, const char* name)
         return false;
     }
     
-    for (size_t scope_idx = stack->size; scope_idx > 0; scope_idx--)
+    scope* current_scope = stack->scopes[stack->cur_scope];
+
+    for (size_t var_idx = 0; var_idx < current_scope->var_count; var_idx++)
     {
-        scope* current_scope = stack->scopes[scope_idx - 1];
-        
-        for (size_t var_idx = 0; var_idx < current_scope->var_count; var_idx++)
-        {
-            char* var_name = current_scope->table[var_idx];
-            if (strcmp(var_name, name) == 0) 
-                return true;
-        }
+        char* var_name = current_scope->table[var_idx];
+        if (strcmp(var_name, name) == 0) 
+            return true;
     }
     
     return false;
@@ -630,6 +627,14 @@ node_t* GetPrint (ast_data* data)
     return semic;
 }
 
+node_t* GetIn (ast_data* data)
+{
+    node_t* in = CUR_TOKEN;
+    data->pos++;
+
+    return in;
+}
+
 
 node_t* GetExpresion (ast_data* data)
 {
@@ -764,7 +769,18 @@ node_t* GetUnar(ast_data* data)
         node_t* oper = CUR_TOKEN;
         data->pos++;
 
-        node_t* val = GetVal(data);
+        node_t* val = GetVal (data);
+        
+        oper->left = val;
+        return oper;
+    }
+
+    if (CUR_TOKEN->type == OP && CUR_TOKEN->val.op == SQRT)
+    {
+        node_t* oper = CUR_TOKEN;
+        data->pos++;
+
+        node_t* val = GetVal (data);
         
         oper->left = val;
         return oper;
@@ -807,6 +823,11 @@ node_t* GetVal(ast_data* data)
         data->pos++;
     }
     
+    else if (CUR_TOKEN->type == OP && CUR_TOKEN->val.op == IN)
+    {
+        node = GetIn (data);
+    }
+
     else if (CUR_TOKEN->type == VAR)
     {   
         if (!find_var(&data->scopes, CUR_TOKEN->val.var))
@@ -821,7 +842,12 @@ node_t* GetVal(ast_data* data)
     
     else if (CUR_TOKEN->type == FUNCTION)
     {
-        node = GetCall(data);
+        node = GetCall (data);
+    }
+
+    else if (CUR_TOKEN->type == FUNCTION)
+    {
+        node = GetIn (data);
     }
 
     else if (CUR_TOKEN->type == OP && CUR_TOKEN->val.op == L_PAR)
@@ -862,11 +888,11 @@ node_t* GetBlock (ast_data* data)
     node_t* node = NULL;
     node_t* old  = NULL;
 
-    if (enter_scope(&data->scopes, BLOCK) != LN_OK)
-    {
-        D_PRINT("Failed to enter block scope\n");
-        return NULL;
-    }
+    // if (enter_scope(&data->scopes, BLOCK) != LN_OK)
+    // {
+    //     D_PRINT("Failed to enter block scope\n");
+    //     return NULL;
+    // }
 
     while (CUR_TOKEN->type != OP || CUR_TOKEN->val.op != R_BR)
     {
@@ -887,11 +913,11 @@ node_t* GetBlock (ast_data* data)
     SYNTAX_ERROR(CUR_TOKEN->type != OP || CUR_TOKEN->val.op != R_BR);
     data->pos++;
 
-    if (exit_scope(&data->scopes) != LN_OK)
-    {
-        D_PRINT("Failed to exit block scope\n");
-        return NULL;
-    }
+    // if (exit_scope(&data->scopes) != LN_OK)
+    // {
+    //     D_PRINT("Failed to exit block scope\n");
+    //     return NULL;
+    // }
 
     return root;
 }

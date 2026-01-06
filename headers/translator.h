@@ -15,7 +15,10 @@ if (cond)\
 #define BASE_REG "BX"
 #define CMP_REG "CX"
 #define VAR_REG "DX"
+#define HELP_REG  "EX"
 #define ADRES_REG "FX"
+#define RET_REG "GX"
+
 
 
 node_t* read_tree (FILE* stream);
@@ -42,6 +45,8 @@ LangErr_t TranslateOp       (node_t* node, FILE* asm_file, stack_scopes* stack);
 
 LangErr_t TranslateCalc     (node_t* node, FILE* asm_file, stack_scopes* stack);
 
+LangErr_t TranslateUn       (node_t* node, FILE* asm_file, stack_scopes* stack);
+
 LangErr_t TranslateCond     (node_t* node, FILE* asm_file, stack_scopes* stack);
 
 LangErr_t TranslateIf       (node_t* node, FILE* asm_file, stack_scopes* stack);
@@ -51,6 +56,8 @@ LangErr_t TranslateWhile    (node_t* node, FILE* asm_file, stack_scopes* stack);
 LangErr_t TranslateReturn   (node_t* node, FILE* asm_file, stack_scopes* stack);
 
 LangErr_t TranslatePrint    (node_t* node, FILE* asm_file, stack_scopes* stack);
+
+LangErr_t TranslateIn       (node_t* node, FILE* asm_file, stack_scopes* stack);
 
 LangErr_t TranslateVarInit  (node_t* node, FILE* asm_file, stack_scopes* stack);
 
@@ -63,6 +70,8 @@ LangErr_t TranslateEq       (node_t* node, FILE* asm_file, stack_scopes* stack);
 LangErr_t TranslateCallFunc (node_t* node, FILE* asm_file, stack_scopes* stack);
 
 LangErr_t HelpFuncParamInit (stack_scopes* stack, char* name, FILE* asm_file);
+
+LangErr_t TranslateParamsReverse (node_t* node, FILE* asm_file, stack_scopes* stack);
 
 void PrintEnterArea (FILE* asm_file);
 

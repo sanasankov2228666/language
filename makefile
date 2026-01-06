@@ -8,7 +8,7 @@ SPU_INCLUDES = -I./SPU/headers_spu
 STACL_INCLUDES = -I./stack/headers
 
 SPU_FILES = SPU/spu.cpp SPU/str_func_spu.cpp SPU/main_spu.cpp stack/stack1.cpp stack/checker.cpp SPU/fileopen.cpp
-ASM_FILES = SPU/assembler/assembler.cpp SPU/spu.cpp SPU/str_func.cpp SPU/assembler/main_assembler.cpp stack/stack1.cpp stack/checker.cpp SPU/fileopen.cpp
+ASM_FILES = SPU/assembler/assembler.cpp SPU/spu.cpp SPU/str_func_spu.cpp SPU/assembler/main_assembler.cpp stack/stack1.cpp stack/checker.cpp SPU/fileopen.cpp
 
 FRONTEND_SRC = $(wildcard source/frontend/*.cpp)
 FILES_FRONTEND = $(FRONTEND_SRC) $(OTHER_SRC)
@@ -27,11 +27,6 @@ back: $(FILES)
 	@echo "=== Compiling back ==="
 	g++ $(FLAGS) $(FILES_BACKEND) $(INCLUDES) -o backend.exe
 	@echo "=== Compilation complete ==="
-
-spu: $(SPU_FILES)
-	@echo "-----------------------------------------------------------------------------------------"
-	g++ $(FLAGS) $(SPU_FILES) $(SPU_INCLUDES) -o spu.exe
-	@echo "-----------------------------------------------------------------------------------------"
 
 asm: $(ASM_FILES)
 	@echo "-----------------------------------------------------------------------------------------"

@@ -1,8 +1,14 @@
 #include "translator.h"
 #include "graphic_dump.h"
 
-int main (void)
+int main( int argc, char* argv[] )
 {
+    if (argc < 2)
+    {
+        printf("ERROR the code file was not specified\n");
+        return LN_ERR;
+    }
+
     tree data = {};
     FILE* tree_fp = file_opener (stderr, "middle_end", "r");
     if (!tree_fp) return 1;
@@ -10,7 +16,7 @@ int main (void)
     data.root = read_tree (tree_fp);
     tree_dump (&data, "check after middle tree");
 
-    if (TranslateTree (data.root, "translate.asm"))
+    if (TranslateTree (data.root, argv[1]))
     {
         deleter(data.root);
         return 1;

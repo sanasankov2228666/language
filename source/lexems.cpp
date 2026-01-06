@@ -15,6 +15,8 @@ struct type_lexem key_words[] =
     {RETURN, "result"   ,    "return" ,    6},
     {INIT,   "spawn"    ,    "init"   ,    4},
     {PRINT,  "print"    ,    "print"  ,    5},
+    {IN,     "in"       ,    "in"     ,    2},
+    {SQRT,   "mineroot" ,    "sqrt"   ,    2}, 
     
 
     {EQ,     "is"        ,       "=",       1},
@@ -31,7 +33,7 @@ struct type_lexem key_words[] =
     {L_BR,   "workbench"     ,    "{",     14 },
     {R_BR,   "close"         ,    "}",     15 },
     {SEMIC,  "bedrock"       ,    ";",     7  },
-    {COMMA,  "and"            ,    ",",     3  },
+    {COMMA,  "and"           ,    ",",     3  },
     
 
     {ADD,    "stack"   ,     "+",     5},
