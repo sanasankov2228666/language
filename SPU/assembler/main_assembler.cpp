@@ -50,7 +50,7 @@ int main( int argc, char* argv[] )
     signature_maker(assembler.buffer_out);
 
     //!открываем файл с байткодом
-    assembler.stream_out = file_opener("SPU/translate_cmd.asm", "wb", __FUNCTION__, __FILE__, __LINE__);
+    assembler.stream_out = file_opener("SPU/bytecode_cmd.asm", "wb", __FUNCTION__, __FILE__, __LINE__);
     if (stream == NULL)
     {
         asm_deleter(&assembler, buffer_commands);
@@ -62,7 +62,7 @@ int main( int argc, char* argv[] )
 
     printf("succsesly assembled\n");
 
-    //check_byte_code(assembler.buffer_out, assembler.len);
+    check_byte_code(assembler.buffer_out, assembler.len);
 
     fclose(assembler.stream_out);
     asm_deleter(&assembler, buffer_commands);

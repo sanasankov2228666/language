@@ -10,41 +10,40 @@
 //!версия ассемблера
 #define VERSION 1
 
-static struct commands
+struct commands
 {
     const char* name;
     const int number;
-    const int arg = 0;
-    size_t hash = 0;
-}
-
+    const int arg;
+    size_t hash;
+};
 
 //!массив комманд
-commands[NUMBER_COMMANDS] =
+static struct commands commands[NUMBER_COMMANDS] =
 {
-    {"PUSH",    PUSH,    1,  hash_func("PUSH")    },
-    {"ADD",     ADD,     0,  hash_func("ADD")     },
-    {"SUB",     SUB,     0,  hash_func("SUB")     },
-    {"DIV",     DIV,     0,  hash_func("DIV")     },
-    {"MULT",    MULT,    0,  hash_func("MULT")    },
-    {"SQRT",    SQvRT,   0,  hash_func("SQRT")    },
-    {"IN",      IN,      0,  hash_func("IN")      },
-    {"HLT",     HLT,     0,  hash_func("HLT")     },
-    {"OUT",     OUT,     0,  hash_func("OUT")     },
-    {"PUSHREG", PUSHREG, 1,  hash_func("PUSHREG") },
-    {"POPREG",  POPREG,  1,  hash_func("POPREG")  },
-    {"PUSHM",   PUSHM,   1,  hash_func("PUSHM")   },
-    {"POPM",    POPM,    1,  hash_func("POPM")    },
-    {"JUMP",    JUMP,    1,  hash_func("JUMP")    },
-    {"JB",      JB,      1,  hash_func("JB")      },
-    {"JBE",     JBE,     1,  hash_func("JBE")     },
-    {"JA",      JA,      1,  hash_func("JA")      },
-    {"JAE",     JAE,     1,  hash_func("JAE")     },
-    {"JE",      JE,      1,  hash_func("JE")      },
-    {"JNE",     JNE,     1,  hash_func("JNE")     },
-    {"CALL",    CALL,    1,  hash_func("CALL")    },
-    {"RET",     RET,     0,  hash_func("RET")     },
-    {"DRAW",    DRAW,    0,  hash_func("DRAW")    }
+    {"PUSH",   PUSH,   1, hash_func("PUSH")    },
+    {"ADD",    ADD,    0, hash_func("ADD")     },
+    {"SUB",    SUB,    0, hash_func("SUB")     },
+    {"DIV",    DIV,    0, hash_func("DIV")     },
+    {"MULT",   MULT,   0, hash_func("MULT")    },
+    {"SQRT",   SQvRT,   0, hash_func("SQRT")    },
+    {"IN",     IN,     0, hash_func("IN")      },
+    {"HLT",    HLT,    0, hash_func("HLT")     },
+    {"OUT",    OUT,    0, hash_func("OUT")     },
+    {"PUSHREG",PUSHREG,1, hash_func("PUSHREG") },
+    {"POPREG", POPREG, 1, hash_func("POPREG")  },
+    {"PUSHM",  PUSHM,  1, hash_func("PUSHM")   },
+    {"POPM",   POPM,   1, hash_func("POPM")    },
+    {"JUMP",   JUMP,   1, hash_func("JUMP")    },
+    {"JB",     JB,     1, hash_func("JB")      },
+    {"JBE",    JBE,    1, hash_func("JBE")     },
+    {"JA",     JA,     1, hash_func("JA")      },
+    {"JAE",    JAE,    1, hash_func("JAE")     },
+    {"JE",     JE,     1, hash_func("JE")      },
+    {"JNE",    JNE,    1, hash_func("JNE")     },
+    {"CALL",   CALL,   1, hash_func("CALL")    },
+    {"RET",    RET,    0, hash_func("RET")     },
+    {"DRAW",   DRAW,   0, hash_func("DRAW")    }
 };
 
 size_t hash_func(const char* str)
@@ -53,7 +52,7 @@ size_t hash_func(const char* str)
     size_t hash = 0;
     size_t shift = 3;
 
-    while (str[index] != '\0')
+    while (str[index] != '\0' && index < 10)  // Ограничиваем длину для безопасности
     {
         hash += (size_t) str[index] * (1 << (shift * index));
         index++;
@@ -78,7 +77,6 @@ void hash_sort()
     qsort(commands, NUMBER_COMMANDS, sizeof(struct commands), hash_cmp);
 }
 
-
 int hash_search_cmp(const void* key, const void* element)
 {
     size_t key_hash = *(size_t*)key;
@@ -89,7 +87,6 @@ int hash_search_cmp(const void* key, const void* element)
 
     return 0;
 }
-
 
 //---------------------------------------------СОЗДАНИЕ-БАЙТ-КОДА-----------------------------------------------------------------------------
 
@@ -102,18 +99,23 @@ size_t byte_code_maker(struct main_str* assembler, int asm_number)
 
     for (; (pc_code < assembler->len && str_c < assembler->len) ; pc_code++, str_c++)
     {
-
         if ((assembler->mas_str[str_c])[0] == '\0') return pc_code;
         while ((assembler->mas_str[str_c])[0] == '\n') str_c++;
 
         if ((assembler->mas_str[str_c])[0] == ':')
         {
+            check_comments (assembler->mas_str[str_c]);
+
             if (proccesing_label(assembler, &pc_code, &str_c, asm_number)) return ERROR;
             pc_code--;
         }
 
+        else if ((assembler->mas_str[str_c])[0] == ';') pc_code--;
+
         else
         {
+            check_comments (assembler->mas_str[str_c]);
+
             ptr_command = recognizing_command(assembler, &pc_code, &str_c);
             if (ptr_command == NULL) return ERROR;
 
@@ -145,12 +147,18 @@ struct commands* recognizing_command(struct main_str* assembler, size_t* pc_code
         return NULL;
     }
 
-    else assembler->buffer_out[*pc_code] = ptr_command->number;
+    if (strcmp(assembler->mas_str[*str_c], ptr_command->name) != 0)
+    {
+        printf("command name mismatch: expected %s, got %s str: %zu\n", 
+               ptr_command->name, assembler->mas_str[*str_c], *str_c);
+        return NULL;
+    }
 
+    assembler->buffer_out[*pc_code] = ptr_command->number;
     return ptr_command;
 }
 
-//!функция обработки комманды без аргумента
+//!функция обработки метки
 asm_err_t proccesing_label(struct main_str* assembler, size_t* pc_code, size_t* str_c, int asm_number)
 {
     if (asm_number == 2) return SUCCSES;
@@ -162,7 +170,6 @@ asm_err_t proccesing_label(struct main_str* assembler, size_t* pc_code, size_t* 
     {
         if (str_label_processing(assembler, pc_code, str_c)) return ERROR;
     }
-
     else
     {
         if (arg_val < 0)
@@ -175,8 +182,6 @@ asm_err_t proccesing_label(struct main_str* assembler, size_t* pc_code, size_t* 
 
     return SUCCSES;
 }
-
-
 
 //!функция обработки комманды с аргументом
 asm_err_t proccesing_witharg(struct main_str* assembler, size_t* pc_code, size_t* str_c, int asm_number)
@@ -192,29 +197,43 @@ asm_err_t proccesing_witharg(struct main_str* assembler, size_t* pc_code, size_t
             if (proccesing_arg_label(assembler, curr_str, pc_code, str_c, asm_number)) return ERROR;
         }
     }
-
     else if (curr_str[0] == '[')
     {
         curr_str++;
-        check_mem_arg(assembler, curr_str, pc_code, str_c);
+        if (check_mem_arg(assembler, curr_str, pc_code, str_c)) return ERROR;
 
-        assembler->buffer_out[*pc_code] = toupper(curr_str[0]) - 'A';
+        char reg_name[3] = {0};
+        reg_name[0] = toupper(curr_str[0]);
+        reg_name[1] = 'X';
+        
+        assembler->buffer_out[*pc_code] = reg_name[0] - 'A';
     }
-
     else
     {
         if (sscanf(curr_str, "%d", &arg_val) == 0)
         {
-            if (assembler->buffer_out[*pc_code - 1] != POPREG && assembler->buffer_out[*pc_code - 1] != PUSHREG)
+            if (assembler->buffer_out[*pc_code - 1] != POPREG && 
+                assembler->buffer_out[*pc_code - 1] != PUSHREG)
             {
-                printf("bad syntax reg func str: %zu", *str_c);
+                printf("bad syntax: expected number or register, got '%s' str: %zu\n", 
+                       curr_str, *str_c);
+                return ERROR;
+            }
+
+            if (strlen(curr_str) < 2 || !isalpha(curr_str[0]) || 
+                toupper(curr_str[1]) != 'X')
+            {
+                printf("bad register syntax: expected format like 'AX', got '%s' str: %zu\n",
+                       curr_str, *str_c);
                 return ERROR;
             }
 
             assembler->buffer_out[*pc_code] = toupper(curr_str[0]) - 'A';
         }
-
-        else assembler->buffer_out[*pc_code] = arg_val;
+        else 
+        {
+            assembler->buffer_out[*pc_code] = arg_val;
+        }
     }
 
     return SUCCSES;
@@ -231,6 +250,7 @@ asm_err_t str_label_processing (struct main_str* assembler, size_t* pc_code, siz
     if (assembler->lables.current_ptr >= MAX_NAME_LBL)
     {
         printf("max number of labels is reached str: %zu", *str_c);
+        return ERROR;
     }
 
     sscanf(ptr, "%s", name_label);
@@ -238,17 +258,19 @@ asm_err_t str_label_processing (struct main_str* assembler, size_t* pc_code, siz
     sscanf(ptr, "%s", assembler->lables.str_labels[assembler->lables.current_ptr].name);
 
     assembler->lables.str_labels[assembler->lables.current_ptr].num = (int) *pc_code;
-
     return SUCCSES;
 }
 
 asm_err_t equal_label_check(struct main_str* assembler, char* name_label, size_t* str_c)
 {
-    for (int i = 0; i < STR_LBL_NUMBER; i++)
+    // Проверяем только заполненные метки
+    for (int i = 0; i <= assembler->lables.current_ptr; i++)
     {
-        if ( my_strcmp(name_label, assembler->lables.str_labels[i].name) == 0)
+        if (assembler->lables.str_labels[i].name[0] != '\0' &&
+            my_strcmp(name_label, assembler->lables.str_labels[i].name) == 0)
         {
-            LABLE_MISSTAKE_OUT;
+            printf("label '%s' already exists str: %zu\n", name_label, *str_c);
+            return ERROR;
         }
     }
 
@@ -262,18 +284,31 @@ asm_err_t proccesing_arg_label(struct main_str* assembler, char* curr_str, size_
     int index = 0;
 
     sscanf(curr_str, "%s", name_label);
-    for ( index = 0; index < STR_LBL_NUMBER && cheaker != 0 ; index++ )
+    
+    // Ищем метку
+    for (index = 0; index <= assembler->lables.current_ptr; index++)
     {
-        cheaker = my_strcmp(name_label, assembler->lables.str_labels[index].name);
+        if (assembler->lables.str_labels[index].name[0] != '\0')
+        {
+            cheaker = my_strcmp(name_label, assembler->lables.str_labels[index].name);
+            if (cheaker == 0) break;
+        }
     }
 
-    if( index == STR_LBL_NUMBER && asm_number == 2)
+    if (cheaker != 0)
     {
-        printf("label %s doesent exist str: %zu\n",name_label, *str_c);
-        return ERROR;
+        if (asm_number == 2)
+        {
+            printf("label '%s' does not exist str: %zu\n", name_label, *str_c);
+            return ERROR;
+        }
+        else
+        {
+            printf("warning: forward reference to label '%s' str: %zu\n", name_label, *str_c);
+            assembler->buffer_out[*pc_code] = 0;
+            return SUCCSES;
+        }
     }
-
-    index--;
 
     assembler->buffer_out[*pc_code] = assembler->lables.str_labels[index].num;
     return SUCCSES;
@@ -284,36 +319,81 @@ asm_err_t check_mem_arg(struct main_str* assembler, char* curr_str, size_t* pc_c
 {
     int index = 0;
 
-    if (check_reg_syntax(curr_str, str_c)) return ERROR;
-
-    if (assembler->buffer_out[*pc_code - 1] == PUSHREG ||
-        assembler->buffer_out[*pc_code - 1] == POPREG)
-    {
-        printf("bad syntax str: %zu\n", *str_c);
+    // Проверяем синтаксис регистра
+    if (check_reg_syntax(curr_str, str_c) != SUCCSES) {
         return ERROR;
     }
 
-    while ( curr_str[index] != ']' && curr_str[index + 1] != '\0' ) index++;
-    if (curr_str[index] != ']')
+    // Проверяем, что предыдущая команда не PUSHREG/POPREG (для них не нужно [])
+    if (assembler->buffer_out[*pc_code - 1] == PUSHREG ||
+        assembler->buffer_out[*pc_code - 1] == POPREG)
     {
-        printf("bad syntax str: %zu\n", *str_c);
+        printf("bad syntax str: %zu - PUSHREG/POPREG don't need brackets\n", *str_c);
+        return ERROR;
+    }
+
+    // Ищем закрывающую скобку
+    while (curr_str[index] != ']' && curr_str[index] != '\0') {
+        index++;
+    }
+
+    if (curr_str[index] != ']') {
+        printf("bad syntax str: %zu - missing closing bracket ']'\n", *str_c);
+        return ERROR;
+    }
+
+    // Проверяем, что после скобки ничего лишнего
+    if (curr_str[index + 1] != '\0' && curr_str[index + 1] != ' ') {
+        printf("bad syntax str: %zu - extra characters after ']'\n", *str_c);
         return ERROR;
     }
 
     return SUCCSES;
 }
 
-//!фунция проверки синтаксиса регистров
+//!функция проверки синтаксиса регистров
 asm_err_t check_reg_syntax(char* curr_str, size_t* str_c)
 {
-    if ( toupper(curr_str[1]) != 'X')
+
+    if (strlen(curr_str) < 3)
     {
-        printf("bad syntax reg arg str: %zu\n", *str_c);
+        printf("bad syntax reg arg str: %zu - too short\n", *str_c);
         return ERROR;
     }
-
+    
+    if (!isalpha(curr_str[0]))
+    {
+        printf("bad syntax reg arg str: %zu - not a letter\n", *str_c);
+        return ERROR;
+    }
+    
+    if (toupper(curr_str[1]) != 'X')
+    {
+        printf("bad syntax reg arg str: %zu - expected 'X' after register\n", *str_c);
+        return ERROR;
+    }
+    
+    if (curr_str[2] == ']')
+    {
+        return SUCCSES;
+    }
+    
+    if (curr_str[2] == '\0' || curr_str[2] == ' ')
+    {
+        return SUCCSES;
+    }
+    
+    printf("bad syntax reg arg str: %zu - unexpected character '%c'\n", *str_c, curr_str[2]);
     return ERROR;
 }
+
+//! Проверка строки на наличие коментариев
+void check_comments (char* str)
+{
+    char* comment = strchr (str, ';');
+    if (comment) *comment = '\0';
+}
+
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 

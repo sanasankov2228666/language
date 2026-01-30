@@ -13,11 +13,11 @@ int main(void)
     slicer();
 
     //!открытие файла с байткодом
-    FILE* stream_bytecode = file_opener("SPU/translate_cmd.asm", "rb", __FUNCTION__, __FILE__, __LINE__);
+    FILE* stream_bytecode = file_opener("SPU/bytecode_cmd.asm", "rb", __FUNCTION__, __FILE__, __LINE__);
     if (stream_bytecode == NULL) return 1;
 
     //!открытие файла записи ошибок
-    data_spu.stream_error = file_opener("SPU/spu_errors.txt", "wb", __FUNCTION__, __FILE__, __LINE__);
+    data_spu.stream_error = file_opener("SPU/logs/spu_errors.txt", "wb", __FUNCTION__, __FILE__, __LINE__);
     if (data_spu.stream_error == NULL) return 1;
 
     //!подсчёт количества комманд

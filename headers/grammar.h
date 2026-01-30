@@ -5,14 +5,16 @@
 #include "tree.h"
 #include "token.h"
 
-#define SYNTAX_ERROR(condition) do\
+#define SYNTAX_ERROR(condition, text) do\
 {\
-    if (condition)\
+    if ( (condition) && is_correct)\
     {\
-        printf("\n==========ERROR===========");\
-        printf("\nSyntax error at %s:%d (GARAMAR RULE: %s)\n", __FILE__, __LINE__, __func__); \
-        printf("position: ... line %zu, %zu\n", CUR_TOKEN->line, CUR_TOKEN->column );\
-        printf("\n==========================\n");\
+        is_correct = false;\
+        printf ("\n==========ERROR===========");\
+        printf ("\nSyntax error at %s:%d (GARAMAR RULE: %s)\n", __FILE__, __LINE__, __func__); \
+        printf ("\n%s\n", text); \
+        printf ("position: ... line %zu, %zu\n", CUR_TOKEN->line, CUR_TOKEN->column );\
+        printf ("\n==========================\n");\
         return  NULL; \
     }\
 }\
@@ -114,6 +116,8 @@ node_t* GetWhile     (ast_data* data);
 
 node_t* GetPrint     (ast_data* data);
 
+node_t* GetIn        (ast_data* data);
+
 node_t* GetExpresion (ast_data* data);
 
 node_t* GetLogicAnd  (ast_data* data);
@@ -145,14 +149,5 @@ node_t* GetArgs      (ast_data* data);
 node_t* GetCall      (ast_data* data);
 
 
-// ================================================ ВЫВОД ДЕРЕВА В ФАЙЛ =========================================================
-
-
-LangErr_t PrintTreeFile (node_t* root);
-
-void PrintNode (node_t* root, FILE* stream);
-
-
-// ============================================================================================================================
 
 #endif

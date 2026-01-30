@@ -27,7 +27,7 @@ typedef cmd_err_t (*cmd_spu) (struct spu*);
 
 //!дебаг
 #ifdef DEBUG
-#define DBG(...) printf(__VA_ARGS__)
+#define DBG(...) fprintf( stream_gl, __VA_ARGS__)
 #else
 #define DBG(...) //
 #endif
@@ -62,8 +62,8 @@ enum
 
 #define OPERATION(data_spu, operate)\
         \
-        stack_push(&data_spu->main_stk, pop1 operate pop2);\
-        DBG("operation %c, %d %c %d = %d\n", #operate[0], pop1, #operate[0], pop2, pop1 operate pop2);\
+        stack_push(&data_spu->main_stk, pop2 operate pop1);\
+        DBG("operation %c, %d %c %d = %d\n", #operate[0], pop1, #operate[0], pop2, pop2 operate pop1);\
         data_spu->counter++;
 
 #define JUMP_COND(data_spu, condition)\

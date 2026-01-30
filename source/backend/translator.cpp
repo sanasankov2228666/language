@@ -5,183 +5,29 @@
 #include "lexems.h"
 #include "str_funcs.h"
 
-// =================================================== МАССИВ С ТИПАМИ =====================================================
+//! глобальные переменные числа if и while 
 
-
-static const char* types[] = { "op" , "var", "num", "func", "cnct" };
-
-static int NUM_TYPES = sizeof(types) / sizeof(types[0]);
-
-
-// =================================================== ЧТЕНИЕ ДЕРЕВА =======================================================
-
-
-node_t* read_tree(FILE* stream)
-{    
-    char* buffer = NULL;
-    file_read(stream, &buffer);
-    char* buffer_copy = buffer;
-    
-    node_t* root = read_node(&buffer, NULL);
-
-    free(buffer_copy);
-    fclose(stream);
-
-    return root;
-}
-
-node_t* read_node(char** cur_pose_ptr, node_t* parent)
-{
-    if (!cur_pose_ptr || !*cur_pose_ptr)
-        return NULL;
-    
-    char* cur = *cur_pose_ptr;
-    
-    while (*cur == ' ' || *cur == '\t' || *cur == '\n') cur++;
-    
-    if (*cur == '(')
-    {
-        cur++;
-        
-        while (*cur == ' ' || *cur == '\t') cur++;
-        
-        char* type_start = cur;
-        while (*cur != ':' && *cur != '\0') cur++;
-        
-        if (*cur == '\0')
-        {
-            D_PRINT("Error: unexpected end\n");
-            return NULL;
-        }
-        
-        char saved_char = *cur;
-        *cur = '\0';
-        int type = check_type(type_start);
-        *cur = saved_char;
-        
-        if (type < 0)
-        {
-            D_PRINT("Error: unknown type '%s'\n", type_start);
-            return NULL;
-        }
-        
-        cur++;
-        while (*cur == ' ' || *cur == '\t') cur++;
-        
-        if (*cur != '"')
-        {
-            D_PRINT("Error: expected '\"' after type\n");
-            return NULL;
-        }
-        cur++;
-        
-        char* val_start = cur;
-        while (*cur != '"' && *cur != '\0') cur++;
-        
-        if (*cur == '\0')
-        {
-            D_PRINT("Error: unexpected end of file in value\n");
-            return NULL;
-        }
-        
-        saved_char = *cur;
-        *cur = '\0';
-
-        tree_t val = {};
-
-        switch (type)
-        {
-        case OP:
-            val.op = SearchKeyWordStd (val_start);
-            break;
-        case VAR:
-        case FUNCTION:
-            val.var = strdup(val_start);
-            break;
-        
-        case NUM:
-            val.num = atoi(val_start);
-            break;
-
-        default:
-            break;
-        }
-
-        *cur = saved_char;
-        
-        cur++;
-        
-        node_t* node = NodeCreator(stderr, type, val, NULL, NULL);
-        if (!node)
-            return NULL;
-        
-        node->parent = parent;
-        
-        *cur_pose_ptr = cur;
-        
-        node->left = read_node(cur_pose_ptr, node);
-        node->right = read_node(cur_pose_ptr, node);
-        
-        cur = *cur_pose_ptr;
-        
-        while (*cur == ' ' || *cur == '\t') cur++;
-        if (*cur == ')') cur++;
-
-        else
-        {
-            D_PRINT("Error: expected ')' but found '%c'\n", *cur);
-            free(node);
-            return NULL;
-        }
-        
-        *cur_pose_ptr = cur;
-        return node;
-    }
-
-    else if (strncmp(cur, "nil", 3) == 0)
-    {
-        cur += 3;
-        while (*cur == ' ' || *cur == '\t' || *cur == '\n')cur++;
-        *cur_pose_ptr = cur;
-
-        return NULL;
-    }
-    
-    D_PRINT("Error: unrecognized format at '%c'\n", *cur);
-    return NULL;
-}
-
-
-int check_type(const char* str)
-{
-    for (int i = 0; i < NUM_TYPES; i++)
-    {
-        if (strcmp(str, types[i]) == 0)
-        {
-            return i + 1;
-        }
-    }
-    
-    D_PRINT("Error: unrecognized type '%s'\n", str);
-    return -1;
-}
-
+int g_if_count    = 0;
+int g_while_count = 0;
+int g_cond_count  = 0;
 
 // ================================================ ТРАНСЛЯЦИЯ ДЕРЕВА ========================================================
 
 
 LangErr_t TranslateTree(node_t* root, const char* filename)
 {
+    FILE* asm_file = file_opener(stderr, filename, "w");
+    if (!asm_file) return LN_ERR;
+    
+    MakeHeadAsmFile (asm_file);
+    
+    g_if_count    = 0;
+    g_while_count = 0;
+    g_cond_count  = 0;
+
     stack_scopes stack = {};
     stack_scopes_init(&stack, 100);
 
-    FILE* asm_file = file_opener(stderr, filename, "w");
-    if (!asm_file) return LN_ERR;
-
-    fprintf(asm_file, "JUMP :main\n\n");
-
-    fprintf(asm_file, ":main\n");
-    
     if (CompileNotFunc (root, asm_file, &stack) != LN_OK)
     {
         stack_scopes_destroy(&stack);
@@ -189,7 +35,7 @@ LangErr_t TranslateTree(node_t* root, const char* filename)
         return LN_ERR;
     }
 
-    fprintf (asm_file, "JUMP :end_program\n");
+    fprintf (asm_file, "\nJUMP :end_program\n");
     
     if (CompileOnlyFunc (root, asm_file, &stack) != LN_OK)
     {
@@ -206,6 +52,31 @@ LangErr_t TranslateTree(node_t* root, const char* filename)
     return LN_OK;
 }
 
+void MakeHeadAsmFile (FILE* asm_file)
+{
+    fprintf (asm_file, "; ===== generation system memory zone =====\n\n");
+
+    fprintf (asm_file, "PUSH 0\n");
+    fprintf (asm_file, "POPREG %s\n" , FREE_REG );
+
+    fprintf (asm_file, "\nPUSH %d\n" , SYSTEM_ZONE);
+    fprintf (asm_file, "POPM [%s]\n" , FREE_REG );
+
+    fprintf (asm_file, "\nPUSH 1\n");
+    fprintf (asm_file, "POPREG %s\n" , FREE_REG );
+
+    fprintf (asm_file, "\nPUSH %d\n" , SYSTEM_ZONE);
+    fprintf (asm_file, "POPM [%s]\n" , FREE_REG );
+
+    fprintf (asm_file, "\nPUSHM [%s]\n", FREE_REG );
+    fprintf (asm_file, "POPREG %s\n" , BASE_REG );
+
+    fprintf (asm_file, "JUMP :main\n\n");
+
+    fprintf (asm_file, "\n; ====== end genetation system zone =====\n\n");
+
+    fprintf (asm_file, ":main\n");
+}
 
 LangErr_t CompileOnlyFunc (node_t* node, FILE* asm_file, stack_scopes* stack)
 {
@@ -242,10 +113,10 @@ LangErr_t CompileNotFunc (node_t* node, FILE* asm_file, stack_scopes* stack)
 {
     if (!node) return LN_OK;
 
-    if (node->type == FUNCTION)
-    {
-        return LN_OK;
-    }
+    // if (node->type == FUNCTION)
+    // {
+    //     return LN_OK;
+    // }
     
     if (node->type == CONNECTION)
     {
@@ -273,7 +144,6 @@ LangErr_t TranslateNodeSpecial (node_t* node, FILE* asm_file, stack_scopes* stac
 {
     if (!node) return LN_OK;
     
-
     switch (node->type)
     {
         case OP:
@@ -295,8 +165,10 @@ LangErr_t TranslateNodeSpecial (node_t* node, FILE* asm_file, stack_scopes* stac
             break;
             
         case CONNECTION:
-            TranslateNodeSpecial (node->left,  asm_file, stack);
-            TranslateNodeSpecial (node->right, asm_file, stack);
+            if (node->left)
+                TranslateNode (node->left, asm_file, stack);
+            if (node->right)
+                TranslateNode (node->right, asm_file, stack);
             return LN_OK;
 
         default:
@@ -309,7 +181,11 @@ LangErr_t TranslateNodeSpecial (node_t* node, FILE* asm_file, stack_scopes* stac
 
 LangErr_t TranslateNode (node_t* node, FILE* asm_file, stack_scopes* stack)
 {
-    if (!node) return LN_OK;
+    if (!node || !asm_file || !stack)
+    {
+        D_PRINT ("ERROR in func params\n");
+        return LN_ERR;
+    }
     
     switch (node->type)
     {
@@ -330,8 +206,10 @@ LangErr_t TranslateNode (node_t* node, FILE* asm_file, stack_scopes* stack)
             break;
             
         case CONNECTION:
-            TranslateNode (node->left,  asm_file, stack);
-            TranslateNode (node->right, asm_file, stack);
+            if (node->left)
+                TranslateNode (node->left, asm_file, stack);
+            if (node->right)
+                TranslateNode (node->right, asm_file, stack);
             return LN_OK;
 
         default:
@@ -352,11 +230,16 @@ LangErr_t TranslateOp(node_t* node, FILE* asm_file, stack_scopes* stack)
     switch (node->val.op)
     {
         case ADD:
-        case SUB:
         case MUL:
         case DIV:
             return TranslateCalc (node, asm_file, stack);
     
+        case SUB:
+            if (node->right)
+                return TranslateCalc (node, asm_file, stack);
+            else
+                return TranslateUn (node, asm_file, stack);
+
         case INIT:
             return TranslateVarInit (node, asm_file, stack);
 
@@ -365,6 +248,9 @@ LangErr_t TranslateOp(node_t* node, FILE* asm_file, stack_scopes* stack)
 
         case EQ:
             return TranslateEq (node, asm_file, stack);
+
+        case SQRT:
+            return TranslateUn (node, asm_file, stack);
 
         case BIGR:
         case SMLR:
@@ -382,8 +268,10 @@ LangErr_t TranslateOp(node_t* node, FILE* asm_file, stack_scopes* stack)
             return  TranslateReturn (node, asm_file, stack);
         case PRINT:
             return TranslatePrint (node, asm_file, stack);
+        case IN:
+            return TranslateIn (node, asm_file, stack);
 
-
+        case COMMA:
         case SEMIC:
             if (node->left)
                 TranslateNode (node->left, asm_file, stack);
@@ -426,6 +314,7 @@ LangErr_t TranslateCalc (node_t* node, FILE* asm_file, stack_scopes* stack)
     return LN_OK;
 }
 
+
 LangErr_t TranslateCond (node_t* node, FILE* asm_file, stack_scopes* stack)
 {
     if (!node || !asm_file || !stack)
@@ -434,28 +323,27 @@ LangErr_t TranslateCond (node_t* node, FILE* asm_file, stack_scopes* stack)
         return LN_ERR;
     }
 
-    static int cond_count = 0;
-    cond_count++;
+    int cond_count = g_cond_count++;
 
     TranslateNode (node->left , asm_file, stack);
     TranslateNode (node->right, asm_file, stack);
 
-    fprintf(asm_file, "PUSH 0\n");
+    fprintf(asm_file, "\nPUSH 0\n");
     fprintf(asm_file, "POPREG %s\n", CMP_REG);
 
     switch (node->val.op)
     {
-    case EQEQ:  fprintf (asm_file, "JNE");
+    case EQEQ:  fprintf (asm_file, "JNE :cond_end%d", cond_count);
         break;
-    case NEQ:   fprintf (asm_file, "JE");
+    case NEQ:   fprintf (asm_file, "JE :cond_end%d" , cond_count);
         break;
-    case BIGR:  fprintf (asm_file, "JBE");
+    case BIGR:  fprintf (asm_file, "JBE :cond_end%d", cond_count);
         break;
-    case EBIGR: fprintf (asm_file, "JB");
+    case EBIGR: fprintf (asm_file, "JB :cond_end%d" , cond_count);
         break;
-    case SMLR:  fprintf (asm_file, "JAE");
+    case SMLR:  fprintf (asm_file, "JAE :cond_end%d", cond_count);
         break;
-    case ESMLR: fprintf (asm_file, "JA");
+    case ESMLR: fprintf (asm_file, "JA :cond_end%d" , cond_count);
         break;    
 
     default:
@@ -464,17 +352,17 @@ LangErr_t TranslateCond (node_t* node, FILE* asm_file, stack_scopes* stack)
         break;
     }
 
-    fprintf (asm_file, " :false%d\n", cond_count);
-
-    fprintf (asm_file, "PUSH 1\n");
-    fprintf (asm_file, "POPREG %s\n", CMP_REG);
-
-    fprintf (asm_file, ":false%d\n", cond_count);
-
-    fprintf (asm_file, "PUSHREG %s\n", CMP_REG);
+    fprintf(asm_file, "\nPUSH 1\n");
+    fprintf(asm_file, "POPREG %s\n", CMP_REG);
+    fprintf(asm_file, "JUMP :cond_end%d\n", cond_count);
+    
+    fprintf(asm_file, ":cond_end%d\n", cond_count);
+    
+    fprintf(asm_file, "PUSHREG %s\n", CMP_REG);
 
     return LN_OK;
 }
+
 
 LangErr_t TranslateIf (node_t* node, FILE* asm_file, stack_scopes* stack)
 {
@@ -484,46 +372,60 @@ LangErr_t TranslateIf (node_t* node, FILE* asm_file, stack_scopes* stack)
         return LN_ERR;
     }
 
-    static int if_count = 0;
-    if_count++;
+    int if_count = g_if_count++;
 
-    enter_scope (stack);
-
+    fprintf (asm_file, "\n; ======== generation if ========\n");
     TranslateCond (node->left, asm_file, stack);
 
     fprintf (asm_file, "\nPUSH 0\n");
-    fprintf (asm_file, "JE :endif%d\n", if_count);
+    
+    if (node->right->val.op == ELSE)
+    {
+        fprintf (asm_file, "JE :else%d\n", if_count);
+        TranslateNode (node->right->left, asm_file, stack);
+        fprintf (asm_file, "JUMP :endif%d\n\n", if_count);
+        
+        fprintf (asm_file, "\n:else%d", if_count);
+        TranslateNode (node->right->right, asm_file, stack);
+        fprintf (asm_file, "JUMP :endif%d\n\n", if_count);
+        
+        fprintf (asm_file, ":endif%d\n\n", if_count);
 
-    TranslateNode (node->right, asm_file, stack);
-
-    fprintf (asm_file, ":endif%d\n\n", if_count);
-
-    exit_scope (stack);
+    }
+    
+    else 
+    {
+        fprintf (asm_file, "JE :endif%d\n", if_count);
+        TranslateNode (node->right, asm_file, stack);
+        fprintf (asm_file, "JUMP :endif%d\n\n", if_count);
+        
+        fprintf (asm_file, ":endif%d\n\n", if_count);
+    }
+    
+    fprintf (asm_file, "\n; ====== end generation if ======\n");
 
     return LN_OK;
 }
 
 LangErr_t TranslateWhile (node_t* node, FILE* asm_file, stack_scopes* stack)
 {
-    static int while_count = 0;
-    while_count++;
- 
-    enter_scope (stack);
+    int while_count = g_while_count++;
 
-    fprintf(asm_file, ":while_start%d\n", while_count);
+    fprintf (asm_file, "\n; ========== generation while =========\n");
+    
+    fprintf(asm_file, "\n:while_start%d\n", while_count);
     
     TranslateCond (node->left, asm_file, stack);
-
-    fprintf (asm_file, "PUSH 0\n");
+    
+    fprintf (asm_file, "\nPUSH 0\n");
     fprintf (asm_file, "JE :endwhile%d\n", while_count);
-
+    
     TranslateNode (node->right, asm_file, stack);
     
-    fprintf(asm_file, "JUMP :while_start%d\n", while_count);
-
-    fprintf (asm_file, ":endwhile%d\n\n", while_count);
-
-    exit_scope (stack);
+    fprintf(asm_file, "\nJUMP :while_start%d\n", while_count);
+    
+    fprintf (asm_file, ":endwhile%d\n", while_count);
+    fprintf (asm_file, "\n; ======== end generation while =========\n");
 
     return LN_OK;
 }
@@ -537,6 +439,12 @@ LangErr_t TranslateReturn (node_t* node, FILE* asm_file, stack_scopes* stack)
     }
 
     TranslateNode (node->left, asm_file, stack);
+
+    // fprintf (asm_file, "POPREG %s\n", RET_REG);
+
+    // PrintExitArea (asm_file);
+
+    PrintExitArea (asm_file);
 
     fprintf (asm_file, "RET\n");
 
@@ -556,8 +464,49 @@ LangErr_t TranslatePrint (node_t* node, FILE* asm_file, stack_scopes* stack)
 
     TranslateNode (expr, asm_file, stack);
 
-    fprintf (asm_file, "OUT\n");
+    fprintf (asm_file, "\nOUT\n");
     
+    return LN_OK;
+}
+
+LangErr_t TranslateIn (node_t* node, FILE* asm_file, stack_scopes* stack)
+{
+    if (!node || !asm_file || !stack)
+    {
+        D_PRINT ("ERROR in func params\n");
+        return LN_ERR;
+    }
+
+    fprintf (asm_file, "\nIN\n");
+
+    return LN_OK;
+}
+
+LangErr_t TranslateUn (node_t* node, FILE* asm_file, stack_scopes* stack)
+{
+    if (!node || !asm_file || !stack)
+    {
+        D_PRINT ("ERROR in func params\n");
+        return LN_ERR;
+    }
+
+    switch (node->val.op)
+    {
+    case SQRT:
+        TranslateNode (node->left, asm_file, stack);
+        fprintf (asm_file, "SQRT\n");
+        break;
+
+    case SUB:
+        fprintf (asm_file, "\nPUSH 0\n");
+        TranslateNode (node->left, asm_file, stack);
+        fprintf (asm_file, "SUB\n");
+        break;
+
+    default:
+        break;
+    }
+
     return LN_OK;
 }
 
@@ -570,32 +519,64 @@ LangErr_t TranslateVarInit (node_t* node, FILE* asm_file, stack_scopes* stack)
         return LN_ERR;
     }
 
-    node_t* param = node->left->left;
-    int adres = init_var (stack, param->val.var);
-    if (adres < 0)
+    if (!node->left || !node->left->left)
     {
-        D_PRINT ("ERROR, in adress\n");
+        D_PRINT("ERROR: invalid variable initialization structure\n");
         return LN_ERR;
     }
+    node_t* param = node->left->left;
 
-    fprintf (asm_file, "PUSH %d\n", adres);
-    fprintf (asm_file, "POPREG %s\n", ADR_REG );
-
+    fprintf (asm_file, "\n; ========= init var %s =========\n", param->val.var);
+    
+    int offset = init_var (stack, param->val.var);
+    if (offset < 0)
+    {
+        D_PRINT ("ERROR, in offset\n");
+        return LN_ERR;
+    }
+    
     TranslateNode (node->left->right, asm_file, stack);
-    fprintf (asm_file, "POPM [%s]\n\n", ADR_REG );
-
+    
+    fprintf (asm_file, "\nPUSHREG %s\n", BASE_REG);
+    fprintf (asm_file, "PUSH %d\n", offset);
+    fprintf (asm_file, "ADD\n");
+    fprintf (asm_file, "POPREG %s\n", ADRES_REG);
+    
+    fprintf (asm_file, "POPM [%s]\n", ADRES_REG );
+    
+    fprintf (asm_file, "PUSHM [%s]\n", FREE_REG);
+    fprintf (asm_file, "PUSH 1\n");
+    fprintf (asm_file, "ADD\n");
+    fprintf (asm_file, "POPM [%s]\n", FREE_REG);
+    
+    fprintf (asm_file, "\n; ========== end init var =========\n");
     return LN_OK;
 }
 
 LangErr_t HelpFuncParamInit (stack_scopes* stack, char* name, FILE* asm_file)
 {
-    int adres = init_var (stack, name);
+    if (!stack || !asm_file || !name)
+    {
+        D_PRINT ("ERROR in func params\n");
+        return LN_ERR;
+    }
 
-    fprintf (asm_file, "PUSH %d\n", adres);
-    fprintf (asm_file, "POPREG %s\n", ADR_REG);
+    fprintf (asm_file, "\n; ========= init func var %s =========\n", name);
 
-    fprintf (asm_file, "POPM [%s]\n", ADR_REG);
+    int offset = init_var (stack, name);
 
+    fprintf (asm_file, "\nPUSHREG %s\n", BASE_REG);
+    fprintf (asm_file, "PUSH %d\n", offset);
+    fprintf (asm_file, "ADD\n");
+    fprintf (asm_file, "POPREG %s\n", ADRES_REG);
+    fprintf (asm_file, "POPM [%s]\n", ADRES_REG );
+
+    fprintf (asm_file, "PUSHM [%s]\n", FREE_REG);
+    fprintf (asm_file, "PUSH 1\n");
+    fprintf (asm_file, "ADD\n");
+    fprintf (asm_file, "POPM [%s]\n", FREE_REG);
+
+    fprintf (asm_file, "\n; ========= end func var init ========\n");
     return LN_OK;
 }
 
@@ -607,11 +588,14 @@ LangErr_t TranslateFunc (node_t* node, FILE* asm_file, stack_scopes* stack)
         return LN_ERR;
     }
 
+    fprintf (asm_file, "\n; ======= func %s declaration ========\n", node->left->val.var);
+
     node_t* name = node->left;
-    fprintf (asm_file, ":%s\n", name->val.var);
+    fprintf (asm_file, "\n:%s\n", name->val.var);
     
     enter_scope (stack);
-    
+    PrintEnterArea (asm_file);
+
     node_t* param = node->right->left;
 
     while (param != NULL)
@@ -620,11 +604,14 @@ LangErr_t TranslateFunc (node_t* node, FILE* asm_file, stack_scopes* stack)
         param = param->left;
     }
 
-    node_t* body = node->right->right;
+    node_t* body = node->right->right;  
+    if (!body) fprintf(asm_file, "RET\n");
+
     TranslateNode (body, asm_file, stack);
     
     exit_scope (stack);
 
+    fprintf (asm_file, "\n; ========= end func declaration ========\n");
     return LN_OK;
 }
 
@@ -636,12 +623,26 @@ LangErr_t TranslateVar(node_t* node, FILE* asm_file, stack_scopes* stack)
         return LN_ERR;
     }
 
-    int adres = get_var_address (stack, node->val.var);
+    scope* cur = stack->scopes[stack->cur_scope];
+    
+    int offset_cur = find_var_in_area (cur, node->val.var );
 
-    fprintf (asm_file, "PUSH %d\n", adres);
-    fprintf (asm_file, "POPREG %s\n", VAR_REG);
+    if (offset_cur < 0)
+    {
+        D_PRINT("ERROR: variable '%s' not found\n", node->val.var);
+        return LN_ERR;
+    }
 
-    fprintf (asm_file, "PUSHM [%s]\n", VAR_REG);
+    fprintf (asm_file, "\n; === var %s use ===\n", node->val.var);
+
+    fprintf(asm_file, "\nPUSHREG %s\n", BASE_REG);
+    fprintf(asm_file, "PUSH %d\n", offset_cur);
+    fprintf(asm_file, "ADD\n");
+    fprintf(asm_file, "POPREG %s\n", ADRES_REG);
+
+    fprintf(asm_file, "PUSHM [%s]\n", ADRES_REG);
+    
+    fprintf (asm_file, "\n; ===== end var =====\n");
 
     return LN_OK;
 }
@@ -654,16 +655,28 @@ LangErr_t TranslateEq (node_t* node, FILE* asm_file, stack_scopes* stack)
         return LN_ERR;
     }
 
-    int adres = get_var_address (stack, node->left->val.var);
-
-    TranslateNode (node->right, asm_file, stack);
-
+    scope* cur = stack->scopes[stack->cur_scope];
     
+    int offset_cur = find_var_in_area (cur, node->left->val.var );
 
-    fprintf (asm_file, "PUSH %d\n", adres);
-    fprintf (asm_file, "POPREG %s\n", ADR_REG);
+    if (offset_cur < 0)
+    {
+        D_PRINT("ERROR: variable '%s' not found\n", node->val.var);
+        return LN_ERR;
+    }
 
-    fprintf (asm_file, "POPM [%s]\n", ADR_REG);
+    if (TranslateNode(node->right, asm_file, stack) != LN_OK)
+    {
+        D_PRINT("ERROR: failed to translate right side expression\n");
+        return LN_ERR;
+    }
+
+    fprintf(asm_file, "\nPUSHREG %s\n", BASE_REG);
+    fprintf(asm_file, "PUSH %d\n", offset_cur);
+    fprintf(asm_file, "ADD\n");
+    fprintf(asm_file, "POPREG %s\n", ADRES_REG);
+
+    fprintf(asm_file, "POPM [%s]\n", ADRES_REG);
     
     return LN_OK;
 }
@@ -672,12 +685,71 @@ LangErr_t TranslateCallFunc (node_t* node, FILE* asm_file, stack_scopes* stack)
 {
     if (!node || !asm_file || !stack)
         return LN_ERR;
-    
 
     if (node->left)
-        TranslateNode(node->left, asm_file, stack);
-    
+        TranslateParamsReverse(node->left, asm_file, stack);;
+
+    fprintf (asm_file, "\n; === func %s call ===\n", node->val.var);
+
     fprintf(asm_file, "CALL :%s\n", node->val.var);
-    
+
+    fprintf (asm_file, "\n; ===== end call =====\n");
     return LN_OK;
+}
+
+LangErr_t TranslateParamsReverse (node_t* node, FILE* asm_file, stack_scopes* stack)
+{
+    if (!node) return LN_OK;
+    
+    if (node->type == OP && node->val.op == COMMA)
+    {
+        if (node->right)
+            TranslateNode(node->right, asm_file, stack);
+        if (node->left)
+            TranslateParamsReverse(node->left, asm_file, stack);
+        return LN_OK;
+    }
+    else
+    {
+        return TranslateNode(node, asm_file, stack);
+    }
+}
+
+
+void PrintEnterArea (FILE* asm_file)
+{
+    fprintf (asm_file, "\n; ======== enter area ======\n");
+
+    fprintf (asm_file, "\nPUSHM [%s]\n", FREE_REG);
+    fprintf (asm_file, "POPREG %s\n", BASE_REG);
+    
+    fprintf (asm_file, "PUSHREG %s\n", FREE_REG);
+    fprintf (asm_file, "PUSH 1\n");
+    fprintf (asm_file, "ADD\n");
+    fprintf (asm_file, "POPREG %s\n", FREE_REG);
+    
+    fprintf (asm_file, "PUSHREG %s\n", BASE_REG);
+    fprintf (asm_file, "POPM [%s]\n", FREE_REG);
+
+    fprintf (asm_file, "\n; ====== area entered ======\n");
+}
+
+void PrintExitArea (FILE* asm_file)
+{
+    fprintf (asm_file, "\n; ===== exit area =====\n");
+    
+    fprintf (asm_file, "PUSHREG %s\n", FREE_REG);
+    fprintf (asm_file, "\nPUSH 1\n");
+    fprintf (asm_file, "SUB\n");
+    fprintf (asm_file, "POPREG %s\n", FREE_REG);
+
+    // fprintf (asm_file, "PUSHREG %s\n", FREE_REG);
+    // fprintf (asm_file, "\nPUSH 1\n");
+    // fprintf (asm_file, "SUB\n");
+    // fprintf (asm_file, "POPREG %s\n", HELP_REG);
+
+    fprintf (asm_file, "PUSHM [%s]\n", FREE_REG);
+    fprintf (asm_file, "POPREG %s\n", BASE_REG);
+
+    fprintf (asm_file, "\n; ===== area exited =====\n");
 }

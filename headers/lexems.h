@@ -26,6 +26,8 @@ enum {
     RETURN,
     INIT,
     PRINT,
+    IN,
+    SQRT,
     
     EQ,
     BIGR,

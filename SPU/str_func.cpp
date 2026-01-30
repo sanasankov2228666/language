@@ -91,10 +91,10 @@ int changer(char** buffer)
             (*buffer)[i] = '\0';
         }
 
-        if ((*buffer)[i] == ';')
-        {
-            (*buffer)[i] = '\0';
-        }
+        // if ((*buffer)[i] == ';')
+        // {
+        //     (*buffer)[i] = '\0';
+        // }
 
         i++;
     }

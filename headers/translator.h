@@ -11,24 +11,22 @@ if (cond)\
     return NULL;\
 }\
 
-#define ADR_REG "AX"
+#define FREE_REG "AX"
 #define BASE_REG "BX"
 #define CMP_REG "CX"
 #define VAR_REG "DX"
-#define VAR_REG "FX"
+#define HELP_REG  "EX"
+#define ADRES_REG "FX"
+#define RET_REG "GX"
 
-
-node_t* read_tree (FILE* stream);
-
-node_t* read_node (char** cur_pose_ptr, node_t* parent);
-
-int check_type (const char* str);
 
 
 // ===================================================== ФУНКЦИИ ТРАНСЛЯЦИИ ==============================================================
 
 
 LangErr_t TranslateTree     (node_t* root, const char* filename);
+
+void      MakeHeadAsmFile   (FILE* asm_file);
 
 LangErr_t CompileOnlyFunc   (node_t* node, FILE* asm_file, stack_scopes* stack);
 
@@ -42,6 +40,8 @@ LangErr_t TranslateOp       (node_t* node, FILE* asm_file, stack_scopes* stack);
 
 LangErr_t TranslateCalc     (node_t* node, FILE* asm_file, stack_scopes* stack);
 
+LangErr_t TranslateUn       (node_t* node, FILE* asm_file, stack_scopes* stack);
+
 LangErr_t TranslateCond     (node_t* node, FILE* asm_file, stack_scopes* stack);
 
 LangErr_t TranslateIf       (node_t* node, FILE* asm_file, stack_scopes* stack);
@@ -51,6 +51,8 @@ LangErr_t TranslateWhile    (node_t* node, FILE* asm_file, stack_scopes* stack);
 LangErr_t TranslateReturn   (node_t* node, FILE* asm_file, stack_scopes* stack);
 
 LangErr_t TranslatePrint    (node_t* node, FILE* asm_file, stack_scopes* stack);
+
+LangErr_t TranslateIn       (node_t* node, FILE* asm_file, stack_scopes* stack);
 
 LangErr_t TranslateVarInit  (node_t* node, FILE* asm_file, stack_scopes* stack);
 
@@ -64,6 +66,11 @@ LangErr_t TranslateCallFunc (node_t* node, FILE* asm_file, stack_scopes* stack);
 
 LangErr_t HelpFuncParamInit (stack_scopes* stack, char* name, FILE* asm_file);
 
+LangErr_t TranslateParamsReverse (node_t* node, FILE* asm_file, stack_scopes* stack);
+
+void PrintEnterArea (FILE* asm_file);
+
+void PrintExitArea (FILE* asm_file);
 
 // =======================================================================================================================================
 

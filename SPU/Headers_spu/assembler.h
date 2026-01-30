@@ -3,9 +3,9 @@
 #include <stdio.h>
 #include <math.h>
 
-#define NUM_LBL_NUMBER 10
-#define STR_LBL_NUMBER 10
-#define MAX_NAME_LBL 15
+#define NUM_LBL_NUMBER 100
+#define STR_LBL_NUMBER 100
+#define MAX_NAME_LBL 150
 
 enum
 {
@@ -84,6 +84,8 @@ asm_err_t check_mem_arg(struct main_str* assembler, char* curr_str, size_t* pc_c
 asm_err_t check_reg_syntax(char* curr_str, size_t* str_c);
 
 struct commands* recognizing_command(struct main_str* assembler, size_t* pc_code, size_t* str_c);
+
+void check_comments (char* str);
 
 //-------------------------------------------------------------------------------------------------------------------------------
 

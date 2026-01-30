@@ -8,6 +8,7 @@
 #include "token.h"
 #include "lexems.h"
 
+bool is_correct = true;
 
 // =============================================== ОСНОВНАЯ ФУНКЦИЯ ЧТЕНИЯ =====================================================
 
@@ -50,7 +51,7 @@ LangErr_t AstDataInit (ast_data* data, data_lexer* data_lex)
 LangErr_t AstDataDeleter (ast_data* data)
 {
     free(data->funcs);
-
+ 
     stack_scopes_destroy(&data->scopes);
 
     data->pos = 0;
@@ -244,16 +245,13 @@ bool find_var(stack_scopes* stack, const char* name)
         return false;
     }
     
-    for (size_t scope_idx = stack->size; scope_idx > 0; scope_idx--)
+    scope* current_scope = stack->scopes[stack->cur_scope];
+
+    for (size_t var_idx = 0; var_idx < current_scope->var_count; var_idx++)
     {
-        scope* current_scope = stack->scopes[scope_idx - 1];
-        
-        for (size_t var_idx = 0; var_idx < current_scope->var_count; var_idx++)
-        {
-            char* var_name = current_scope->table[var_idx];
-            if (strcmp(var_name, name) == 0) 
-                return true;
-        }
+        char* var_name = current_scope->table[var_idx];
+        if (strcmp(var_name, name) == 0) 
+            return true;
     }
     
     return false;
@@ -347,7 +345,8 @@ node_t* GetFunc (ast_data* data)
     node_t* connect2 = CUR_TOKEN;
     data->pos++;
 
-    SYNTAX_ERROR (CUR_TOKEN->type != FUNCTION);
+    SYNTAX_ERROR (CUR_TOKEN->type != FUNCTION,
+                  "expected name of function");
 
     node_t* name = CUR_TOKEN;
     data->funcs[data->func_pos].name = CUR_TOKEN->val.var;
@@ -359,12 +358,13 @@ node_t* GetFunc (ast_data* data)
             found = 1;
     }
 
-    SYNTAX_ERROR (found);
+    SYNTAX_ERROR (found, "function is already exist");
 
     data->pos++;
 
     SYNTAX_ERROR (CUR_TOKEN->type != OP &&
-                  CUR_TOKEN->val.op != L_PAR);
+                  CUR_TOKEN->val.op != L_PAR, 
+                  "expected '('");
     data->pos++;
 
     if (enter_scope(&data->scopes, FUNCTION) != LN_OK)
@@ -397,13 +397,19 @@ node_t* GetFunc (ast_data* data)
 
 node_t* GetReturn(ast_data* data)
 {
-    SYNTAX_ERROR(CUR_TOKEN->type != OP || CUR_TOKEN->val.op != RETURN );
+    SYNTAX_ERROR(CUR_TOKEN->type   != OP    || 
+                 CUR_TOKEN->val.op != RETURN,
+                 "expected return");
+
     node_t* return_op = CUR_TOKEN;
     data->pos++;
     
     node_t* expr = GetExpresion(data);
     
-    SYNTAX_ERROR(CUR_TOKEN->type != OP || CUR_TOKEN->val.op != SEMIC);
+    SYNTAX_ERROR(CUR_TOKEN->type   != OP   || 
+                 CUR_TOKEN->val.op != SEMIC,
+                 "expected ';'");
+
     node_t* semic = CUR_TOKEN;
     data->pos++;
     
@@ -421,7 +427,7 @@ node_t* GetParams(ast_data* data)
         return NULL;
     }
 
-    SYNTAX_ERROR(CUR_TOKEN->type != VAR);
+    SYNTAX_ERROR(CUR_TOKEN->type != VAR, "expected variable name");
     
     node_t* root = CUR_TOKEN;
     node_t* old  = NULL;
@@ -442,10 +448,13 @@ node_t* GetParams(ast_data* data)
             break;
         }
         
-        SYNTAX_ERROR(CUR_TOKEN->type != OP || CUR_TOKEN->val.op != COMMA);
+        SYNTAX_ERROR(CUR_TOKEN->type   != OP   || 
+                     CUR_TOKEN->val.op != COMMA,
+                     "expected ','");
+
         data->pos++;
         
-        SYNTAX_ERROR(CUR_TOKEN->type != VAR);
+        SYNTAX_ERROR(CUR_TOKEN->type != VAR, "expected variable name");
         
         node_t* next_param = CUR_TOKEN;
 
@@ -494,7 +503,11 @@ node_t* GetStatement (ast_data* data)
     else if (CUR_TOKEN->type == FUNCTION)
     {
         root = GetCall (data);
-        SYNTAX_ERROR(CUR_TOKEN->type != OP || CUR_TOKEN->val.op != SEMIC);
+
+        SYNTAX_ERROR(CUR_TOKEN->type   != OP   ||
+                     CUR_TOKEN->val.op != SEMIC,
+                     "expected ';'");
+
         node_t* semic = CUR_TOKEN;
 
         semic->left = root;
@@ -516,7 +529,11 @@ node_t* GetStatement (ast_data* data)
     else
     {
         root = GetExpresion (data);
-        SYNTAX_ERROR(CUR_TOKEN->type != OP || CUR_TOKEN->val.op != SEMIC);
+
+        SYNTAX_ERROR(CUR_TOKEN->type   != OP  ||
+                     CUR_TOKEN->val.op != SEMIC,
+                     "expected ';'");
+
         node_t* semic = CUR_TOKEN;
 
         semic->left = root;
@@ -545,12 +562,18 @@ node_t* GetIf (ast_data* data)
     node_t* connection = CUR_TOKEN;
     data->pos++;
 
-    SYNTAX_ERROR(CUR_TOKEN->type != OP || CUR_TOKEN->val.op != L_PAR);
+    SYNTAX_ERROR(CUR_TOKEN->type   != OP  ||
+                 CUR_TOKEN->val.op != L_PAR,
+                 "expected '('");
+
     data->pos++;
 
     node_t* condition = GetExpresion (data);
 
-    SYNTAX_ERROR(CUR_TOKEN->type != OP || CUR_TOKEN->val.op != R_PAR);
+    SYNTAX_ERROR(CUR_TOKEN->type   != OP  ||
+                 CUR_TOKEN->val.op != R_PAR,
+                 "expected ')'");
+
     data->pos++;
 
 
@@ -594,12 +617,16 @@ node_t* GetWhile (ast_data* data)
     node_t* connection = CUR_TOKEN;
     data->pos++;
 
-    SYNTAX_ERROR(CUR_TOKEN->type != OP || CUR_TOKEN->val.op != L_PAR);
-    data->pos++;
+    SYNTAX_ERROR(CUR_TOKEN->type   != OP  ||
+                 CUR_TOKEN->val.op != L_PAR,
+                 "expected '('");
 
     node_t* condition = GetExpresion (data);
 
-    SYNTAX_ERROR(CUR_TOKEN->type != OP || CUR_TOKEN->val.op != R_PAR);
+    SYNTAX_ERROR(CUR_TOKEN->type   != OP  ||
+                 CUR_TOKEN->val.op != R_PAR,
+                 "expected ')'");
+
     data->pos++;
     
     node_t* body = GetBlock (data);
@@ -620,7 +647,10 @@ node_t* GetPrint (ast_data* data)
 
     node_t* exp = GetExpresion (data);
 
-    SYNTAX_ERROR (CUR_TOKEN->type != OP || CUR_TOKEN->val.op != SEMIC);
+    SYNTAX_ERROR(CUR_TOKEN->type   != OP  ||
+                    CUR_TOKEN->val.op != SEMIC,
+                    "expected ';'");
+
     node_t* semic = CUR_TOKEN;
     data->pos++;
 
@@ -628,6 +658,14 @@ node_t* GetPrint (ast_data* data)
     print->left = exp;
 
     return semic;
+}
+
+node_t* GetIn (ast_data* data)
+{
+    node_t* in = CUR_TOKEN;
+    data->pos++;
+
+    return in;
 }
 
 
@@ -769,6 +807,17 @@ node_t* GetUnar(ast_data* data)
         oper->left = val;
         return oper;
     }
+
+    if (CUR_TOKEN->type == OP && CUR_TOKEN->val.op == SQRT)
+    {
+        node_t* oper = CUR_TOKEN;
+        data->pos++;
+
+        node_t* val = GetVal(data);
+        
+        oper->left = val;
+        return oper;
+    }
     
     else if (CUR_TOKEN->type == OP && CUR_TOKEN->val.op == ADD)
     {
@@ -788,9 +837,12 @@ node_t* GetBracket (ast_data* data)
         data->pos++;
         node = GetExpresion (data);
         
-        SYNTAX_ERROR(CUR_TOKEN->type != OP && CUR_TOKEN->val.op != R_PAR);
-        data->pos++;
+        SYNTAX_ERROR(CUR_TOKEN->type   != OP  ||
+                    CUR_TOKEN->val.op != R_PAR,
+                    "expected ')'");
 
+        data->pos++;
+        
         return node;
     }
 
@@ -807,6 +859,11 @@ node_t* GetVal(ast_data* data)
         data->pos++;
     }
     
+    else if (CUR_TOKEN->type == OP && CUR_TOKEN->val.op == IN)
+    {
+        node = GetIn (data);
+    }
+
     else if (CUR_TOKEN->type == VAR)
     {   
         if (!find_var(&data->scopes, CUR_TOKEN->val.var))
@@ -821,17 +878,12 @@ node_t* GetVal(ast_data* data)
     
     else if (CUR_TOKEN->type == FUNCTION)
     {
-        node = GetCall(data);
+        node = GetCall (data);
     }
 
-    else if (CUR_TOKEN->type == OP && CUR_TOKEN->val.op == L_PAR)
+    else if (CUR_TOKEN->type == OP && CUR_TOKEN->val.op == IN)
     {
-        data->pos++;
-        
-        node = GetExpresion(data);
-        
-        SYNTAX_ERROR(CUR_TOKEN->type != OP || CUR_TOKEN->val.op != R_PAR);
-        data->pos++;
+        node = GetIn (data);
     }
 
     else if (CUR_TOKEN->type == OP && 
@@ -847,7 +899,7 @@ node_t* GetVal(ast_data* data)
         node = op_node;
     }
     
-    else SYNTAX_ERROR(1);
+    else SYNTAX_ERROR(1, "expected initialization");
 
     return node;
 }
@@ -855,18 +907,21 @@ node_t* GetVal(ast_data* data)
 
 node_t* GetBlock (ast_data* data)
 {
-    SYNTAX_ERROR(CUR_TOKEN->type != OP || CUR_TOKEN->val.op != L_BR);
+    SYNTAX_ERROR(CUR_TOKEN->type != OP    || 
+                 CUR_TOKEN->val.op != L_BR,
+                 "expected '{'");
+
     data->pos++;
 
     node_t* root = NULL;
     node_t* node = NULL;
     node_t* old  = NULL;
 
-    if (enter_scope(&data->scopes, BLOCK) != LN_OK)
-    {
-        D_PRINT("Failed to enter block scope\n");
-        return NULL;
-    }
+    // if (enter_scope(&data->scopes, BLOCK) != LN_OK)
+    // {
+    //     D_PRINT("Failed to enter block scope\n");
+    //     return NULL;
+    // }
 
     while (CUR_TOKEN->type != OP || CUR_TOKEN->val.op != R_BR)
     {
@@ -884,14 +939,17 @@ node_t* GetBlock (ast_data* data)
         old = node;
     }
 
-    SYNTAX_ERROR(CUR_TOKEN->type != OP || CUR_TOKEN->val.op != R_BR);
+    SYNTAX_ERROR(CUR_TOKEN->type != OP    || 
+                 CUR_TOKEN->val.op != R_BR,
+                 "expected '}'");
+
     data->pos++;
 
-    if (exit_scope(&data->scopes) != LN_OK)
-    {
-        D_PRINT("Failed to exit block scope\n");
-        return NULL;
-    }
+    // if (exit_scope(&data->scopes) != LN_OK)
+    // {
+    //     D_PRINT("Failed to exit block scope\n");
+    //     return NULL;
+    // }
 
     return root;
 }
@@ -902,7 +960,8 @@ node_t* GetVarInit (ast_data* data)
     node_t* init = CUR_TOKEN;
     data->pos++;
 
-    SYNTAX_ERROR(CUR_TOKEN->type != VAR);
+    SYNTAX_ERROR(CUR_TOKEN->type != VAR, "expected variable name");
+
     node_t* var   = CUR_TOKEN;
     node_t* semic = NULL;
     
@@ -914,13 +973,20 @@ node_t* GetVarInit (ast_data* data)
 
     data->pos++;
 
-    SYNTAX_ERROR(CUR_TOKEN->type != OP || CUR_TOKEN->val.op != EQ);
+    SYNTAX_ERROR(CUR_TOKEN->type   != OP || 
+                 CUR_TOKEN->val.op != EQ ,
+                 "expected '='");
+
     node_t* equal = CUR_TOKEN;
     data->pos++;
 
     node_t* expr = GetExpresion (data);
 
-    SYNTAX_ERROR(CUR_TOKEN->type != OP || CUR_TOKEN->val.op != SEMIC);
+    SYNTAX_ERROR(CUR_TOKEN->type   != OP  ||
+                 CUR_TOKEN->val.op != SEMIC,
+                 "expected ';'");
+
+
     semic = CUR_TOKEN;
     data->pos++;
 
@@ -946,13 +1012,19 @@ node_t* GetVarAct (ast_data* data)
 
     data->pos++;
 
-    SYNTAX_ERROR(CUR_TOKEN->type != OP || CUR_TOKEN->val.op != EQ);
+    SYNTAX_ERROR(CUR_TOKEN->type   != OP || 
+                 CUR_TOKEN->val.op != EQ ,
+                 "expected '='");
+
     node_t* equal = CUR_TOKEN;
     data->pos++;
 
     node_t* val = GetExpresion (data);
 
-    SYNTAX_ERROR(CUR_TOKEN->type != OP || CUR_TOKEN->val.op != SEMIC);
+    SYNTAX_ERROR(CUR_TOKEN->type   != OP  ||
+                 CUR_TOKEN->val.op != SEMIC,
+                 "expected ';'");
+
     node_t* semic = CUR_TOKEN;
     data->pos++;
 
@@ -986,7 +1058,9 @@ node_t* GetArgs (ast_data* data)
         root = comma;
     }
     
-    SYNTAX_ERROR(CUR_TOKEN->type != OP ||CUR_TOKEN->val.op != R_PAR);
+    SYNTAX_ERROR(CUR_TOKEN->type   != OP  ||
+                 CUR_TOKEN->val.op != R_PAR,
+                 "expected ')'");
     data->pos++;
     
     return root;
@@ -998,7 +1072,7 @@ node_t* GetCall (ast_data* data)
     node_t* function = CUR_TOKEN;
     int check = 1;
 
-    SYNTAX_ERROR(CUR_TOKEN->type != FUNCTION);
+    SYNTAX_ERROR(CUR_TOKEN->type != FUNCTION, "expected functiom name");
 
     for (size_t i = 0; i < data->func_pos && check != 0; i++ )
     {
@@ -1008,10 +1082,12 @@ node_t* GetCall (ast_data* data)
     if (check)
         printf("function %s doesnt exist\n", CUR_TOKEN->val.var);
 
-    SYNTAX_ERROR(check);
+    SYNTAX_ERROR(check, "");
     data->pos++;
 
-    SYNTAX_ERROR(CUR_TOKEN->type != OP || CUR_TOKEN->val.op != L_PAR);
+    SYNTAX_ERROR(CUR_TOKEN->type   != OP  ||
+                 CUR_TOKEN->val.op != L_PAR,
+                 "expected '('");
     data->pos++;
 
     node_t* args = GetArgs (data);
@@ -1019,68 +1095,4 @@ node_t* GetCall (ast_data* data)
     function->left = args;
 
     return function;
-}
-
-
-// ================================================ ВЫВОД ДЕРЕВА В ФАЙЛ =========================================================
-
-
-LangErr_t PrintTreeFile (node_t* root)
-{
-    FILE* middle_end_fp = file_opener (stderr, "middle_end", "w");
-    if (!middle_end_fp) return LN_ERR;
-
-    PrintNode (root, middle_end_fp);
-
-    printf("tree was saved in middle end file\n");
-
-    return LN_OK;
-}
-
-void PrintNode (node_t* root, FILE* stream)
-{
-    if (!root) 
-    {
-        fprintf (stream, " nil");
-        return;
-    }
-
-    fprintf (stream, "(");
-    
-    switch (root->type)
-    {
-    case OP:
-        fprintf (stream, "op: ");
-        fprintf (stream, "\"%s\"", key_words[root->val.op - 1].std_name);
-        break;
-    
-    case VAR:
-        fprintf (stream, "var: ");
-        fprintf (stream, "\"%s\"", root->val.var);
-        break;
-
-    case FUNCTION:
-        fprintf (stream, "func: ");
-        fprintf (stream, "\"%s\"", root->val.var);
-        break;
-
-    case NUM:
-        fprintf (stream, "num: ");
-        fprintf (stream, "\"%d\"", root->val.num);
-        break;
-       
-    case CONNECTION:
-        fprintf (stream, "cnct: ");
-        fprintf (stream, "\"cnct\"");
-        break;
-
-    default:
-        fprintf (stream, "unknown:");
-        break;
-    }
-
-    PrintNode (root->left, stream);
-    PrintNode (root->right, stream);
-
-    fprintf (stream, ")");
 }

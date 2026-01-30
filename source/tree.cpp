@@ -1,6 +1,6 @@
 #include "tree.h"
 #include "config.h"
-
+#include "lexems.h"
 
 node_t* NodeCreator (FILE* log, int type, tree_t val, node_t* left, node_t* right)
 {
@@ -129,4 +129,67 @@ void deleter (node_t* root)
     }
 
     free(root);
+}
+
+// ================================================ ВЫВОД ДЕРЕВА В ФАЙЛ =========================================================
+
+
+LangErr_t PrintTreeFile (node_t* root)
+{
+    FILE* middle_end_fp = file_opener (stderr, "source/middleend/middle_end", "w");
+    if (!middle_end_fp) return LN_ERR;
+
+    PrintNode (root, middle_end_fp);
+
+    printf("tree was saved in middle end file\n");
+
+    return LN_OK;
+}
+
+void PrintNode (node_t* root, FILE* stream)
+{
+    if (!root) 
+    {
+        fprintf (stream, " nil");
+        return;
+    }
+
+    fprintf (stream, "(");
+    
+    switch (root->type)
+    {
+    case OP:
+        fprintf (stream, "op: ");
+        fprintf (stream, "\"%s\"", key_words[root->val.op - 1].std_name);
+        break;
+    
+    case VAR:
+        fprintf (stream, "var: ");
+        fprintf (stream, "\"%s\"", root->val.var);
+        break;
+
+    case FUNCTION:
+        fprintf (stream, "func: ");
+        fprintf (stream, "\"%s\"", root->val.var);
+        break;
+
+    case NUM:
+        fprintf (stream, "num: ");
+        fprintf (stream, "\"%d\"", root->val.num);
+        break;
+       
+    case CONNECTION:
+        fprintf (stream, "cnct: ");
+        fprintf (stream, "\"cnct\"");
+        break;
+
+    default:
+        fprintf (stream, "unknown:");
+        break;
+    }
+
+    PrintNode (root->left, stream);
+    PrintNode (root->right, stream);
+
+    fprintf (stream, ")");
 }

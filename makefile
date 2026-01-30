@@ -2,44 +2,86 @@ FLAGS = -D _DEBUG -ggdb3 -std=c++17 -O0 -Wall -Wextra -Weffc++ -Waggressive-loop
 
 INCLUDES = -I./headers
 
-OTHER_SRC = source/graphic_dump.cpp source/tree.cpp source/str_funcs.cpp source/lexems.cpp
+OTHER_SRC = source/graphic_dump.cpp source/tree.cpp source/str_funcs.cpp source/lexems.cpp source/treereader.cpp
+
+SPU_INCLUDES = -I./SPU/headers_spu
+STACK_INCLUDES = -I./stack/headers
+
+SPU_FILES = SPU/spu.cpp SPU/str_func.cpp SPU/main_spu.cpp stack/stack1.cpp stack/checker.cpp SPU/fileopen.cpp
+ASM_FILES = SPU/assembler/assembler.cpp SPU/spu.cpp SPU/str_func.cpp SPU/assembler/main_assembler.cpp stack/stack1.cpp stack/checker.cpp SPU/fileopen.cpp
 
 FRONTEND_SRC = $(wildcard source/frontend/*.cpp)
 FILES_FRONTEND = $(FRONTEND_SRC) $(OTHER_SRC)
+
+MIDDLEEND_SRC = $(wildcard source/middleend/*.cpp)
+FILES_MIDDLEEND = $(MIDDLEEND_SRC) $(OTHER_SRC) 
 
 BACKEND_SRC = $(wildcard source/backend/*.cpp)
 FILES_BACKEND = $(BACKEND_SRC) $(OTHER_SRC)
 
 all: front
 
-front: $(FILES)
+front: $(FILES_FRONTEND)
 	@echo "=== Compiling front ==="
 	g++ $(FLAGS) $(FILES_FRONTEND) $(INCLUDES) -o frontend.exe
+	@echo "=== Compilation complete ==="
+
+middle: $(FILES_MIDDLEEND)
+	@echo "=== Compiling middle ==="
+	g++ $(FLAGS) $(FILES_MIDDLEEND) $(INCLUDES) -o middle.exe
+	@echo "=== Compilation complete ==="
+
+back: $(FILES_BACKEND)
+	@echo "=== Compiling back ==="
+	g++ $(FLAGS) $(FILES_BACKEND) $(INCLUDES) -o backend.exe
+	@echo "=== Compilation complete ==="
+
+asm: $(ASM_FILES)
+	@echo "=== Compiling asm ==="
+	g++ $(FLAGS) $(ASM_FILES) $(SPU_INCLUDES) -o assembler.exe
+	@echo "=== Compilation complete ==="
+
+spu: $(SPU_FILES)
+	@echo "=== Compiling SPU ==="
+	g++ $(FLAGS) $(SPU_FILES) $(SPU_INCLUDES) $(STACK_INCLUDES) -o spu.exe
 	@echo "=== Compilation complete ==="
 
 run-front: front
 	@echo "=== Running front ==="
 	./frontend.exe
 
-back: $(FILES)
-	@echo "=== Compiling back ==="
-	g++ $(FLAGS) $(FILES_BACKEND) $(INCLUDES) -o backend.exe
-	@echo "=== Compilation complete ==="
+run-middle: middle
+	@echo "=== Running middle ==="
+	./middle.exe
 
 run-back: back
 	@echo "=== Running back ==="
 	./backend.exe
 
+run-asm: asm
+	./assembler.exe
+
+run-spu: spu
+	./spu.exe
+
 clean:
 	rm -f frontend.exe
+	rm -f middle.exe
 	rm -f backend.exe
+	rm -f assembler.exe
+	rm -f spu.exe
 
 help:
 	@echo "Available commands:"
-	@echo "  make all       - compile front (default)"
-	@echo "  make front     - compile front"
-	@echo "  make run-front - compile and run front"
-	@echo "  make back      - compile and run back"
-	@echo "  make run-back  - compile and run back"		
-	@echo "  make clean     - remove compiled program"
-	@echo "  make help      - show this help"
+	@echo "  make all        - compile front (default)"
+	@echo "  make front      - compile front"
+	@echo "  make run-front  - compile and run front"
+	@echo "  make middle     - compile middle"
+	@echo "  make run-middle - compile and run middle"
+	@echo "  make back       - compile back"
+	@echo "  make run-back   - compile and run back"	
+	@echo "  make spu        - compile SPU"
+	@echo "  make asm        - compile assembler"
+	@echo "  make run-asm    - compile and run assembler"	
+	@echo "  make clean      - remove compiled program"
+	@echo "  make help       - show this help"

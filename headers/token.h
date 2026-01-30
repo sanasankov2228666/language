@@ -13,63 +13,6 @@
 #define ERR_TOKEN -2
 
 
-// ================ ВСЕ ТОКЕНЫ ====================
-// enum tokens
-// {
-//     IF = 1,
-//     ELSE,
-//     WHILE,
-//     FUNC,
-//     RETURN,
-//     INIT,
-    
-//     EQ,
-//     BIGR,
-//     SMLR,
-//     EBIGR,
-//     ESMLR,
-//     EQEQ,
-//     NEQ,
-    
-//     L_PAR,
-//     R_PAR,
-//     L_BR,
-//     R_BR,
-//     L_SBR,
-//     R_SBR,
-//     SEMIC,
-//     COMMA,
-//     COLON,
-//     DOT,
-    
-//     ADD,
-//     SUB,
-//     MUL,
-//     DIV,
-//     POW,
-    
-//     SIN,
-//     COS,
-//     TG,
-//     CTG,
-//     LN,
-//     LOG,
-//     SH,
-//     CH,
-//     ARSIN,
-//     ARCOS,
-//     ARTG,
-//     ARCTG,
-//     EXP,
-//     TH,
-//     CTH,
-
-//     AND,
-//     OR,
-// };
-
-
-
 // =========== СТРУКТУРА МАССИВА ТОКЕНОВ ============
 struct tokens_arr
 {
@@ -97,7 +40,7 @@ struct data_lexer
 
 // ======================================================= ОСНОВНЫЕ ФУНКЦИИ ==========================================================
 
-data_lexer Tokenization   (FILE* code);
+data_lexer Tokenization    (FILE* code);
 
 node_t* ProcessToken       (data_lexer* data);
 
@@ -109,7 +52,9 @@ node_t* ProcessingOperator (data_lexer* data);
 
 node_t* ProcessingKeyWord  (data_lexer* data, int key);
 
-node_t* ProcessingIdentificator (data_lexer* data, char* start, bool func);
+node_t* ProcessingIdentificator (data_lexer* data, char* start, bool check_is_func);
+
+LangErr_t CreateConnection (data_lexer* data);
 
 LangErr_t ConnectionAdd    (data_lexer* data, node_t* token);
 
@@ -127,7 +72,7 @@ node_t* ErrToken ();
 
 void SkipSpace (data_lexer* data);
 
-bool CheckFunc (data_lexer* data);
+bool CheckFunc(data_lexer* data);
 
 
 // ==================================================== ФУНКЦИИ БУФЕРА ТОКЕНОВ ==========================================================

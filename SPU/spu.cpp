@@ -3,10 +3,10 @@
 #include <time.h>
 
 //!включение режима дебага
-//#define DEBUG
+#define DEBUG
 
 //!включение режима видео
-#define VIDEO_MODE
+//#define VIDEO_MODE
 
 #include "spu.h"
 
@@ -36,6 +36,8 @@ commands_arr[NUMBER_COMMANDS] =
     {CALL,    0, cmd_call       },     {RET,     0, cmd_ret        },
     {DRAW,    0, cmd_draw       }
 };
+
+FILE* stream_gl = fopen ("SPU/logs/log_operations.txt", "w");
 
 //---------------------------------------------------------ПРОЦЕССОР----------------------------------------------------------------------------
 
@@ -258,7 +260,13 @@ cmd_err_t cmd_popm(struct spu* data_spu)
         return ERROR;
     }
 
-    data_spu->ram[ data_spu->reg[ data_spu->code [data_spu->counter] ] ] = stack_pop(&data_spu->main_stk);
+    int value = stack_pop(&data_spu->main_stk);
+    int address = data_spu->reg[ data_spu->code [data_spu->counter] ];
+    
+    data_spu->ram[address] = value;
+    
+    DBG("POPM: saved value %d to memory address %d (register %c)\n", 
+        value, address, data_spu->code[data_spu->counter] + 65);
 
     data_spu->counter++;
     return SUCCSES;
@@ -277,6 +285,12 @@ cmd_err_t cmd_pushm(struct spu* data_spu)
     }
 
     stack_push(&data_spu->main_stk, data_spu->ram[ data_spu->reg[ data_spu->code [data_spu->counter] ] ]);
+
+    int address = data_spu->reg[ data_spu->code [data_spu->counter] ];
+    int value = data_spu->ram[address];
+    
+    DBG("PUSHM: loaded value %d from memory address %d (register %c)\n", 
+        value, address, data_spu->code[data_spu->counter] + 65);
 
     data_spu->counter++;
     return SUCCSES;
@@ -313,7 +327,7 @@ cmd_err_t cmd_draw(struct spu* data_spu)
     printf("--------------------V-RAM-OUTPUT--------------------\n");
     for (size_t i_v = 0; i_v < VERTICAL_LEN; i_v++ )
     {
-        for ( int i_h = 0; i_h < HORIZONTAL_LEN; i_h++)
+        for ( size_t i_h = 0; i_h < HORIZONTAL_LEN; i_h++)
         {
             printf(ANSI_COLOR_RED" %c " ANSI_COLOR_RESET,  data_spu->ram[i_h + HORIZONTAL_LEN * i_v] );
         }
@@ -416,7 +430,7 @@ int check_func(struct spu data_spu)
     case 2:
         if (data_spu.main_stk.size < 2)
         {
-            fprintf(data_spu.stream_error, "stack has %zu param\n", data_spu.main_stk.size);
+            fprintf(data_spu.stream_error, "stack has %zu param, cmd_numb - %zu\n", data_spu.main_stk.size, data_spu.counter);
             return 1;
         }
 
@@ -425,7 +439,7 @@ int check_func(struct spu data_spu)
     case 1:
         if (data_spu.main_stk.size < 1)
         {
-            fprintf(data_spu.stream_error, "stack has %zu param\n", data_spu.main_stk.size);
+            fprintf(data_spu.stream_error, "stack has %zu param, cmd_numb - %zu\n", data_spu.main_stk.size, data_spu.counter);
             return 1;
         }
 

@@ -74,6 +74,10 @@ int LRpos(node_t* node);
 
 FILE* file_opener (FILE* log, const char * Filename, const char * Mode);
 
+LangErr_t PrintTreeFile (node_t* root);
+
+void PrintNode (node_t* root, FILE* stream);
+
 void deleter (node_t* root);
 
 #endif

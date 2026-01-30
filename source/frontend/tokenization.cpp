@@ -8,37 +8,6 @@
 #include "config.h"
 #include "str_funcs.h"
 
-// ===================================================== МАССИВ С ОПЕРАТОРАМИ ==========================================================
-
-
-// struct type_lexem key_words[] =
-// {
-//     {IF,     "if",      2},  {ELSE,   "else",    4},  {WHILE,  "while",   5},
-//     {FUNC,   "func",    4},  {RETURN, "return",  6},  {INIT ,  "init" ,   4},
-    
-//     {EQ,     "=",       1},  {BIGR,   ">",       1},  {SMLR,   "<",       1},
-//     {EBIGR,  ">=",      2},  {ESMLR,  "<=",      2},  {EQEQ,   "==",      2},
-//     {NEQ,    "!=",      2},
-    
-//     {L_PAR,  "(",       1},  {R_PAR,  ")",       1},  {L_BR,   "{",       1},
-//     {R_BR,   "}",       1},  {L_SBR,  "[",       1},  {R_SBR,  "]",       1},
-//     {SEMIC,  ";",       1},  {COMMA,  ",",       1},  {COLON,  ":",       1},
-//     {DOT,    ".",       1},
-    
-//     {ADD,    "+",       1},  {SUB,    "-",       1},  {MUL,    "*",       1},
-//     {DIV,    "/",       1},  {POW,    "^",       1},  {SIN,    "sin",     3},
-//     {COS,    "cos",     3},  {TG,     "tg",      2},  {CTG,    "ctg",     3},
-//     {LN,     "ln",      2},  {LOG,    "log",     3},  {SH,     "sh",      2},
-//     {CH,     "ch",      2},  {ARSIN,  "arcsin",  6},  {ARCOS,  "arccos",  6},
-//     {ARTG,   "arctg",   5},  {ARCTG,  "arcctg",  6},  {EXP,    "exp",     3},
-//     {TH,     "th",      2},  {CTH,    "cth",     3},
-
-//     {AND,    "&&",      2},  {OR,     "||",      2},
-// };
-
-
-// ===================================================================================================================================
-
 
 //==============================================
 //         ТОКЕНИЗАТОР ОСНОВНАЯ ФУНКЦИЯ 
@@ -64,9 +33,13 @@ data_lexer Tokenization (FILE* code)
 
         if (token->type == ERR_TOKEN)
         {
-            D_PRINT ("ERROR processing token at line %zu, col %zu\n\n", data.line, data.column);                                                    
+            D_PRINT ("ERROR processing token at line %zu, col %zu\n\n", data.line, data.column);  
+                                                          
             TokenArrayFree(&data.tokens);
             free(data.source);
+            free(token);
+
+            data.error = 1;
             data.source = NULL;
             return data;
         }
@@ -106,7 +79,6 @@ node_t* ProcessToken (data_lexer* data)
     return EndToken();
     
     node_t* token = {};
-    //printf("-------\n%s\n----------", data->source);
 
     if ( isdigit (*(data->current_pos)) )
     {
@@ -118,9 +90,9 @@ node_t* ProcessToken (data_lexer* data)
     {
         char* start = data->current_pos;
         MovePose (data);
-        
-        bool check_func = CheckFunc (data);
 
+        bool check_is_func = CheckFunc (data);
+        
         char old_sym = *(data->current_pos);
         *(data->current_pos) = '\0';
         
@@ -130,13 +102,13 @@ node_t* ProcessToken (data_lexer* data)
         {
             token = ProcessingKeyWord (data, key);
             *(data->current_pos) = old_sym;
-
+            
             return token;
         }
 
         else if (key == UNREC_KEY)
         {
-            token = ProcessingIdentificator (data, start, check_func);
+            token = ProcessingIdentificator (data, start, check_is_func);
             *(data->current_pos) = old_sym;
 
             return token;
@@ -148,83 +120,6 @@ node_t* ProcessToken (data_lexer* data)
 
     return ErrToken();
 }
-
-
-
-
-// node_t* ProcessToken (data_lexer* data)
-// {
-//     if (!data) return ErrToken();
-
-//     SkipSpace(data);
-
-//     while (*(data->current_pos) == '/' && *(data->current_pos + 1) == '/')
-//     {
-//         while (*(data->current_pos) != '\n' && *(data->current_pos) != '\0')
-//         {
-//             data->current_pos++;
-//             data->column++;
-//         }
-//         SkipSpace(data);
-//     }
-
-//     if (*(data->current_pos) == '\0' || *(data->current_pos) == EOF)
-//     return EndToken();
-
-//     node_t* token = {};
-
-//     if (strchr("(){}[];,:.", *(data->current_pos)))
-//     {
-//         token = ProcessingBrackets(data);
-//         return token;
-//     }
-
-//     else if (strchr("=><!+-*/^|&", *(data->current_pos)))
-//     {
-//         token = ProcessingOperator(data);
-//         return token;
-//     }
-
-//     else if ( isdigit (*(data->current_pos)) )
-//     {
-//         token = ProcessingNum (data);
-//         return token;
-//     }
-
-//     else if ( isalpha( *(data->current_pos) ) || *(data->current_pos) == '_' )
-//     {
-//         char* start = data->current_pos;
-//         MovePose (data);
-        
-//         bool check_func = CheckFunc (data);
-
-//         char old_sym = *(data->current_pos);
-//         *(data->current_pos) = '\0';
-        
-//         int key = SearchKeyWord (start);
-        
-//         if (key != UNREC_KEY)
-//         {
-//             token = ProcessingKeyWord (data, key);
-//             *(data->current_pos) = old_sym;
-
-//             return token;
-//         }
-
-//         else if (key == UNREC_KEY)
-//         {
-//             token = ProcessingIdentificator (data, start, check_func);
-//             *(data->current_pos) = old_sym;
-
-//             return token;
-//         }
-//     }
-
-//     D_PRINT("Unknown character: '%c' at line %zu, col %zu\n", 
-//         *(data->current_pos),  data->line, data->column);
-
-//     return ErrToken();
-// }
 
 
 // Обработка скобок и стоп символов
@@ -280,12 +175,6 @@ node_t* ProcessingOperator(data_lexer* data)
     token->column = data->column;
 
     char* start = data->current_pos;
-
-    // while (*(data->current_pos) != '(' && *(data->current_pos) != ' ')
-    // {
-    //     data->current_pos++;
-    //     data->column++;
-    // }
     
     while (!isalpha(*(data->current_pos)) && 
            !isdigit(*(data->current_pos)) && 
@@ -320,6 +209,8 @@ node_t* ProcessingOperator(data_lexer* data)
 node_t* ProcessingKeyWord (data_lexer* data, int key)
 {
     node_t* token = (node_t*) calloc (1, sizeof(node_t));
+    if (!token) return ErrToken();
+
     token->type   = OP;
 
     token->line = data->line;
@@ -332,11 +223,14 @@ node_t* ProcessingKeyWord (data_lexer* data, int key)
 
 
 // Обработка идентификатора
-node_t* ProcessingIdentificator (data_lexer* data, char* start, bool func)
+node_t* ProcessingIdentificator (data_lexer* data, char* start,  bool check_is_func)
 {
     node_t* token = (node_t*) calloc (1, sizeof(node_t));
-    
-    if (func) token->type = FUNCTION;
+    if (!token) return ErrToken ();
+
+    if (check_is_func)
+        token->type = FUNCTION;
+
     else token->type = VAR;
 
     token->line   = data->line;
@@ -347,37 +241,34 @@ node_t* ProcessingIdentificator (data_lexer* data, char* start, bool func)
     return token;
 }
 
+// Создание связующего узла
+LangErr_t CreateConnection (data_lexer* data)
+{
+    node_t* connect = (node_t*) calloc (1, sizeof(node_t));
+    if (!connect) return LN_ERR;
+
+    connect->type = CONNECTION;
+
+    connect->line   = data->line;
+    connect->column = data->column;
+
+    PutToken (&data->tokens, connect);
+
+    return LN_OK;
+}
+
 
 // Добавление связующего узла
 LangErr_t ConnectionAdd (data_lexer* data, node_t* token)
 {
     if (token->type == OP &&  (token->val.op == IF || token->val.op == WHILE) )
     {
-        node_t* connect = (node_t*) calloc (1, sizeof(node_t));
-        connect->type = CONNECTION;
-
-        connect->line   = data->line;
-        connect->column = data->column;
-
-        PutToken (&data->tokens, connect);
+        return (CreateConnection (data));
     } 
 
     else if (token->type == OP &&  (token->val.op == FUNC) )
     {
-        node_t* connect1 = (node_t*) calloc (1, sizeof(node_t));
-        node_t* connect2 = (node_t*) calloc (1, sizeof(node_t));
-
-        connect1->type = CONNECTION;
-        connect2->type = CONNECTION;
-
-        connect1->line   = data->line;
-        connect1->column = data->column;
-
-        connect2->line   = data->line;
-        connect2->column = data->column;
-
-        PutToken (&data->tokens, connect1);
-        PutToken (&data->tokens, connect2);
+        return CreateConnection (data) || CreateConnection (data);
     }
 
     return LN_OK;
@@ -458,7 +349,7 @@ node_t* ErrToken ()
 }
 
 
-// Проверка является ли функцией
+// Проверка чем является  индентификатор
 bool CheckFunc(data_lexer* data)
 {
     char* pos = data->current_pos;
@@ -572,6 +463,7 @@ void TokenArrayFree(tokens_arr* data)
 //               ФУНКЦИЯ ОТЛАДКИ
 //===============================================
 
+
 // Печать массива токенов
 void DebugTokens(const tokens_arr* tokens)
 {
@@ -598,7 +490,7 @@ void DebugTokens(const tokens_arr* tokens)
                 break;
                 
             case NUM:
-                printf("NUM  %d\n", t->val.num);
+                printf("NUM  '%d'\n", t->val.num);
                 break;
                 
             case VAR:
@@ -610,7 +502,7 @@ void DebugTokens(const tokens_arr* tokens)
                 break;
 
             case CONNECTION:
-                printf("CONNECTION\n");
+                printf("LINK 'link'\n");
                 break;
                 
             case END_TOKEN:

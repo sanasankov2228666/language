@@ -122,11 +122,8 @@ LangErr_t dump_generator(tree* data, const char* filename, const char* reason)
         return LN_ERR;
     }
     
-    // Создаем директории если их нет
-    system("mkdir -p dot png 2>/dev/null");
-    
     char dot_filename[256] = {};
-    snprintf(dot_filename, sizeof(dot_filename), "dot/%s.dot", filename);
+    snprintf(dot_filename, sizeof(dot_filename), "dumps/dot/%s.dot", filename);
     
     FILE* dot_file = fopen(dot_filename, "w");
     if (!dot_file)
@@ -162,7 +159,7 @@ LangErr_t dump_generator(tree* data, const char* filename, const char* reason)
     
     char command[512];
     snprintf(command, sizeof(command), 
-             "dot -Tpng dot/%s.dot -o png/%s.png", 
+             "dot -Tpng dumps/dot/%s.dot -o dumps/png/%s.png", 
              filename, filename);
     
     int result = system(command);
@@ -173,7 +170,7 @@ LangErr_t dump_generator(tree* data, const char* filename, const char* reason)
         return LN_ERR;
     }
     
-    printf("generated: png/%s.png\n", filename);
+    printf("generated: dumps/png/%s.png\n", filename);
 
     html_generator(filename, data);
 
