@@ -1,6 +1,8 @@
 #include "tree.h"
 #include "treereader.h"
 #include "graphic_dump.h"
+#include "retranslator.h"
+#include "config.h"
 
 int main ( int argc, char* argv[] )
 {
@@ -17,8 +19,15 @@ int main ( int argc, char* argv[] )
     data.root = read_tree (middle_file);
     tree_dump (&data, "check tree in retranslation");
     
-    fclose (middle_file);
-    
+    if (Retranslator (data.root, argv[2]))
+    {
+        D_PRINT ("ERROR in retranslating");
+        return LN_ERR;
+    }
 
+    printf ("\nRetranslation complete in file %s\n", argv[2]);
+    deleter (data.root);
+
+    return LN_OK;
 }
 

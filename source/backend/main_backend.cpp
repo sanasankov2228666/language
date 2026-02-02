@@ -23,6 +23,8 @@ int main( int argc, char* argv[] )
         return 1;
     }
 
+    printf ("\nFile %s was generated\n", argv[1]);
+    
     deleter (data.root);
 
     return 0;

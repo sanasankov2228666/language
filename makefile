@@ -19,6 +19,9 @@ FILES_MIDDLEEND = $(MIDDLEEND_SRC) $(OTHER_SRC)
 BACKEND_SRC = $(wildcard source/backend/*.cpp)
 FILES_BACKEND = $(BACKEND_SRC) $(OTHER_SRC)
 
+RETRANSLATOR_SRC = $(wildcard source/retranslator/*.cpp)
+FILES_RETRANSLATOR = $(RETRANSLATOR_SRC) $(OTHER_SRC)
+
 all: front
 
 front: $(FILES_FRONTEND)
@@ -34,6 +37,11 @@ middle: $(FILES_MIDDLEEND)
 back: $(FILES_BACKEND)
 	@echo "=== Compiling back ==="
 	g++ $(FLAGS) $(FILES_BACKEND) $(INCLUDES) -o backend.exe
+	@echo "=== Compilation complete ==="
+
+retranslator:
+	@echo "=== Compiling retranslator ==="
+	g++ $(FLAGS) $(FILES_RETRANSLATOR) $(INCLUDES) -o retranslator.exe
 	@echo "=== Compilation complete ==="
 
 asm: $(ASM_FILES)
@@ -57,6 +65,10 @@ run-middle: middle
 run-back: back
 	@echo "=== Running back ==="
 	./backend.exe
+
+run-retranslator: retranslator
+	@echo "=== Running retranslator ==="
+	./retranslator.exe
 
 run-asm: asm
 	./assembler.exe
