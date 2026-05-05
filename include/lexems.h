@@ -14,11 +14,10 @@ struct type_lexem
 };
 
 extern struct type_lexem key_words[];
+extern const int G_LEX_NUM;
 
-extern int LEX_NUM;
-
-
-enum {
+enum
+{
     IF = 1,
     ELSE,
     WHILE,
@@ -54,7 +53,6 @@ enum {
 };
 
 int SearchKeyWord    (char* str);
-
 int SearchKeyWordStd (char* str);
 
 #endif

@@ -7,4 +7,6 @@ size_t file_read(FILE* stream, char** buffer);
 
 size_t size_file(FILE* stream);
 
+FILE* file_opener (const char * Filename, const char * Mode);
+
 #endif

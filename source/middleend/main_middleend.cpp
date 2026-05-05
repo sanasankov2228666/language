@@ -1,16 +1,19 @@
 #include "optimizations.h"
-#include "treereader.h"
-#include "config.h"
+#include "tree.h"
+#include "debug.h"
 #include "graphic_dump.h"
 #include "grammar.h"
+#include "file_opener.h"
 
-int main(void)
+int main (void)
 {
-    FILE* midlend_file = file_opener (stderr, "source/middleend/middle_end", "r");
+    FILE* midlend_file = file_opener ("source/middleend/middle_end", "r");
     if (!midlend_file) return LN_ERR;
 
+    printf ("------------------------ middleend -----------------------\n");
+
     tree data = {};
-    node_t* root = read_tree(midlend_file);
+    node_t* root = ReadTree (midlend_file);
     if (!root) 
     {
         D_PRINT ("ERROR, root is NULL, problems with reading tree");
@@ -28,7 +31,9 @@ int main(void)
     tree_dump (&data, "check tree in middleend");
 
     PrintTreeFile (new_root);
-    deleter (new_root);
+    TreeDeleter (new_root);
 
-    return 0;
+    printf ("---------------------------------------------------------\n");
+
+    return LN_OK;
 }

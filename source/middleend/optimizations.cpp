@@ -1,12 +1,12 @@
 #include "optimizations.h"
-#include "token.h"
+#include "tokenization.h"
 #include "tree.h"
-#include "config.h"
+#include "debug.h"
 #include "lexems.h"
 #include "str_funcs.h"
 #include "math.h"
 
-double CalcTree(node_t* root)
+double CalcTree (node_t* root)
 {
     if (root == NULL) return NAN;
 
@@ -19,15 +19,15 @@ double CalcTree(node_t* root)
         root->val.op == MUL || 
         root->val.op == DIV))
     {
-        double left_val = CalcTree(root->left);
-        double right_val = CalcTree(root->right);
+        double left_val  = CalcTree (root->left);
+        double right_val = CalcTree (root->right);
 
         switch (root->val.op)
         {
             case ADD:   return left_val + right_val;
             case SUB:   return left_val - right_val;
             case MUL:   return left_val * right_val;
-            case DIV:   return (fabs(right_val) < TOLOW) ? NAN : left_val / right_val;;
+            case DIV:   return (fabs (right_val) < TOLOW) ? NAN : left_val / right_val;;
 
             default:    return NAN;
         }
@@ -40,8 +40,8 @@ node_t* simplifier(node_t* root)
 {
     if (root == NULL) return NULL;
 
-    root->left  = simplifier(root->left);
-    root->right = simplifier(root->right);
+    root->left  = simplifier (root->left);
+    root->right = simplifier (root->right);
 
     if (root->type == OP) 
     {    
@@ -50,20 +50,20 @@ node_t* simplifier(node_t* root)
             root->right->type == NUM) 
         {
             double result = CalcTree (root);
-            if (!isnan(result)) 
+            if (!isnan (result)) 
             {
                 node_t* new_node = CreateNum ((int) result);
                 
-                deleter(root);
+                TreeDeleter (root);
                 return new_node;
             }
         }
 
-        node_t* simplified = simplifySpecCases(root);
+        node_t* simplified = simplifySpecCases (root);
         
         if (simplified != root) 
         {
-            deleter(root);
+            TreeDeleter (root);
             return simplified;
         }
     }
@@ -71,13 +71,13 @@ node_t* simplifier(node_t* root)
     return root;
 }
 
-node_t* simplifySpecCases(node_t* node)
+node_t* simplifySpecCases (node_t* node)
 {
     if (!node || !node->left || !node->right) return node;
 
     if (node->type == ADD || node->type == SUB)
     {
-        if (node->left->type == NUM && fabs(node->left->val.num) < TOLOW)
+        if (node->left->type == NUM && fabs (node->left->val.num) < TOLOW)
         {
             return CopySubtree (node->right);
         }

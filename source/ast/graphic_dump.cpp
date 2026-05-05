@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include "graphic_dump.h"
 #include "lexems.h"
+#include "debug.h"
 
 void dot_node_gen(node_t* root, FILE* dot_file, size_t* number)
 {
@@ -21,7 +22,7 @@ void dot_node_gen(node_t* root, FILE* dot_file, size_t* number)
         case OP:
         {
             int op_index = root->val.op - 1;
-            if (op_index >= 0 && op_index < (int) LEX_NUM)
+            if (op_index >= 0 && op_index < (int) G_LEX_NUM)
             {
                 node_data = key_words[op_index].name;
             }
@@ -47,9 +48,6 @@ void dot_node_gen(node_t* root, FILE* dot_file, size_t* number)
             break;
         
         case CONNECTION:
-            
-            
-
         case NUM:
             snprintf(data_buffer, sizeof(data_buffer), "%d", root->val.num);
             node_data = data_buffer;

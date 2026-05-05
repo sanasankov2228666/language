@@ -8,12 +8,6 @@
 
 typedef int LangErr_t;  
 
-enum error
-{
-    LN_OK   = 0,
-    LN_ERR  = 1,
-};
-
 // типы в узле 
 enum types
 {
@@ -53,12 +47,11 @@ struct tree
     node_t* root     = NULL;
     size_t  size     = 0;
     size_t  error    = 0;
-    FILE*   log      = NULL;
     FILE*   html_out = NULL;
 };
 
 
-node_t* NodeCreator (FILE* log, int type, tree_t val, node_t* left, node_t* right);
+node_t* NodeCreator (int type, tree_t val, node_t* left, node_t* right);
 
 node_t* CreateNum(int value);
 
@@ -72,12 +65,16 @@ node_t* CopySubtree(node_t* node);
 
 int LRpos(node_t* node);
 
-FILE* file_opener (FILE* log, const char * Filename, const char * Mode);
-
 LangErr_t PrintTreeFile (node_t* root);
 
 void PrintNode (node_t* root, FILE* stream);
 
-void deleter (node_t* root);
+node_t* ReadTree (FILE* stream);
+
+node_t* ReadNode (char** cur_pose_ptr, node_t* parent);
+
+int check_type (const char* str);
+
+void TreeDeleter (node_t* root);
 
 #endif

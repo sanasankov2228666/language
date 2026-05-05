@@ -3,20 +3,16 @@
 
 #include "tree.h"
 
-// ----------------------------------------------------------ТОКЕНЫ----------------------------------------------------------------------
-
+// ============================================================= ТОКЕН =================================================================
 
 #define ZERO_ARR 
-
 #define END_TOKEN -1
-
 #define ERR_TOKEN -2
-
 
 // =========== СТРУКТУРА МАССИВА ТОКЕНОВ ============
 struct tokens_arr
 {
-    node_t** arr = NULL;
+    node_t* arr = NULL;
     size_t size     = 0;
     size_t capacity = 0;
 };
@@ -41,56 +37,36 @@ struct data_lexer
 // ======================================================= ОСНОВНЫЕ ФУНКЦИИ ==========================================================
 
 data_lexer Tokenization    (FILE* code);
-
-node_t* ProcessToken       (data_lexer* data);
-
-node_t* ProcessingBrackets (data_lexer* data);
-
-node_t* ProcessingNum      (data_lexer* data);
-
-node_t* ProcessingOperator (data_lexer* data);
-
-node_t* ProcessingKeyWord  (data_lexer* data, int key);
-
-node_t* ProcessingIdentificator (data_lexer* data, char* start, bool check_is_func);
+node_t ProcessToken        (data_lexer* data);
+node_t ProcessingBrackets  (data_lexer* data);
+node_t ProcessingNum       (data_lexer* data);
+node_t ProcessingOperator  (data_lexer* data);
+node_t ProcessingKeyWord   (data_lexer* data, int key);
+node_t ProcessingIdentificator (data_lexer* data, char* start, bool check_is_bracket);
 
 LangErr_t CreateConnection (data_lexer* data);
-
-LangErr_t ConnectionAdd    (data_lexer* data, node_t* token);
-
+LangErr_t ConnectionAdd    (data_lexer* data, node_t token);
 
 // =================================================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ =========================================================
 
-
 LangErr_t DataLexerInit (data_lexer* data, FILE* fp);
+node_t EndToken ();
+node_t ErrToken ();
 
-char* MovePose (data_lexer* data);
-
-node_t* EndToken ();
-
-node_t* ErrToken ();
-
-void SkipSpace (data_lexer* data);
-
-bool CheckFunc(data_lexer* data);
-
+char* MovePose    (data_lexer* data);
+void SkipSpace    (data_lexer* data);
+void SkipComments (data_lexer* data);
+bool CheckIsBracket  (data_lexer* data);
 
 // ==================================================== ФУНКЦИИ БУФЕРА ТОКЕНОВ ==========================================================
 
-
 LangErr_t TokenArrayInit (tokens_arr* data, size_t capacity);
+LangErr_t TokenArrayFree (tokens_arr* data);
 
-node_t* GetToken (tokens_arr* data, size_t place);
-
-LangErr_t PutToken (tokens_arr* data, node_t* val);
-
-size_t TokenArraySize(const tokens_arr* data);
-
-size_t TokenArrayCapacity(const tokens_arr* data);
-
-void TokenArrayFree(tokens_arr* data);
-
+node_t    GetToken (tokens_arr* data, size_t place);
+LangErr_t PutToken (tokens_arr* data, node_t token);
+size_t TokenArraySize     (const tokens_arr* data);
+size_t TokenArrayCapacity (const tokens_arr* data);
 void DebugTokens(const tokens_arr* tokens);
-
 
 #endif

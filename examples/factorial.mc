@@ -1,7 +1,5 @@
 craft factorial with n components
 workbench
-    print n bedrock
-
     observer with n at_least 1 components
     workbench 
         result 1 bedrock

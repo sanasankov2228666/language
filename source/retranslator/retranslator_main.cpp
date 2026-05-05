@@ -1,8 +1,8 @@
 #include "tree.h"
-#include "treereader.h"
 #include "graphic_dump.h"
+#include "debug.h"
 #include "retranslator.h"
-#include "config.h"
+#include "file_opener.h"
 
 int main ( int argc, char* argv[] )
 {
@@ -12,11 +12,13 @@ int main ( int argc, char* argv[] )
         return LN_ERR;
     }
 
-    FILE* middle_file = file_opener (stderr, argv[1], "r");
+    printf ("----------------------- retranslator -----------------------\n");
+
+    FILE* middle_file = file_opener (argv[1], "r");
     if (!middle_file) return LN_ERR;
 
     tree data = {};
-    data.root = read_tree (middle_file);
+    data.root = ReadTree (middle_file);
     tree_dump (&data, "check tree in retranslation");
     
     if (Retranslator (data.root, argv[2]))
@@ -26,7 +28,9 @@ int main ( int argc, char* argv[] )
     }
 
     printf ("\nRetranslation complete in file %s\n", argv[2]);
-    deleter (data.root);
+    TreeDeleter (data.root);
+
+    printf ("---------------------------------------------------------\n");
 
     return LN_OK;
 }

@@ -100,29 +100,29 @@ cmd_err_t cmd_calc(struct spu* data_spu)
 
     switch (swch)
     {
-    case ADD:
+        case ADD:
 
-        OPERATION(data_spu, +)
-        break;
+            OPERATION(data_spu, +)
+            break;
 
-    case SUB:
+        case SUB:
 
-        OPERATION(data_spu, -);
-        break;
+            OPERATION(data_spu, -);
+            break;
 
-    case MULT:
+        case MULT:
 
-        OPERATION(data_spu, *);
-        break;
+            OPERATION(data_spu, *);
+            break;
 
-    case DIV:
-        if (pop2 == 0 ) return ERROR;
+        case DIV:
+            if (pop1 == 0 ) return ERROR;
 
-        OPERATION(data_spu, /);
-        break;
+            OPERATION(data_spu, /);
+            break;
 
-    default:
-        break;
+        default:
+            break;
     }
 
     return SUCCSES;
@@ -138,32 +138,32 @@ cmd_err_t cmd_jumps_cond(struct spu* data_spu)
 
     switch (swch)
     {
-    case JB:
-        JUMP_COND(data_spu, <)
-        break;
+        case JB:
+            JUMP_COND(data_spu, <)
+            break;
 
-    case JBE:
-        JUMP_COND(data_spu, <=)
-        break;
+        case JBE:
+            JUMP_COND(data_spu, <=)
+            break;
 
-    case JA:
-        JUMP_COND(data_spu, >)
-        break;
+        case JA:
+            JUMP_COND(data_spu, >)
+            break;
 
-    case JAE:
-        JUMP_COND(data_spu, >=)
-        break;
+        case JAE:
+            JUMP_COND(data_spu, >=)
+            break;
 
-    case JE:
-        JUMP_COND(data_spu, ==)
-        break;
+        case JE:
+            JUMP_COND(data_spu, ==)
+            break;
 
-    case JNE:
-        JUMP_COND(data_spu, !=)
-        break;
+        case JNE:
+            JUMP_COND(data_spu, !=)
+            break;
 
-    default:
-        break;
+        default:
+            break;
     }
 
     return SUCCSES;

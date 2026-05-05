@@ -52,8 +52,8 @@ workbench
     result 1 bedrock
 close
 
-spawn a is in bedrock
-spawn b is in bedrock
-spawn c is in bedrock 
+spawn coef_a is in bedrock
+spawn coef_b is in bedrock
+spawn coef_c is in bedrock 
 
-quadric_solver with a and b and c components bedrock
+quadric_solver with coef_a and coef_b and coef_c components bedrock

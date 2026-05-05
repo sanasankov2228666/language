@@ -14,6 +14,9 @@ POPM [AX]
 
 PUSHM [AX]
 POPREG BX
+
+PUSH 100
+POPREG HX
 JUMP :main
 
 
@@ -21,7 +24,7 @@ JUMP :main
 
 :main
 
-; ========= init var a =========
+; ========= init var coef_a =========
 
 IN
 
@@ -37,7 +40,7 @@ POPM [AX]
 
 ; ========== end init var =========
 
-; ========= init var b =========
+; ========= init var coef_b =========
 
 IN
 
@@ -53,7 +56,7 @@ POPM [AX]
 
 ; ========== end init var =========
 
-; ========= init var c =========
+; ========= init var coef_c =========
 
 IN
 
@@ -69,9 +72,9 @@ POPM [AX]
 
 ; ========== end init var =========
 
-; === var c use ===
+; === var coef_c use ===
 
-PUSHREG BX
+PUSHREG HX
 PUSH 2
 ADD
 POPREG FX
@@ -79,9 +82,9 @@ PUSHM [FX]
 
 ; ===== end var =====
 
-; === var b use ===
+; === var coef_b use ===
 
-PUSHREG BX
+PUSHREG HX
 PUSH 1
 ADD
 POPREG FX
@@ -89,9 +92,9 @@ PUSHM [FX]
 
 ; ===== end var =====
 
-; === var a use ===
+; === var coef_a use ===
 
-PUSHREG BX
+PUSHREG HX
 PUSH 0
 ADD
 POPREG FX
@@ -240,7 +243,11 @@ PUSHREG AX
 PUSH 1
 SUB
 POPREG AX
-PUSHM [AX]
+PUSHREG AX
+PUSH 1
+SUB
+POPREG FX
+PUSHM [FX]
 POPREG BX
 
 ; ===== area exited =====
@@ -676,7 +683,7 @@ MULT
 DIV
 
 PUSHREG BX
-PUSH 5
+PUSH 4
 ADD
 POPREG FX
 POPM [FX]
@@ -728,7 +735,7 @@ MULT
 DIV
 
 PUSHREG BX
-PUSH 6
+PUSH 5
 ADD
 POPREG FX
 POPM [FX]
@@ -742,7 +749,7 @@ POPM [AX]
 ; === var x1 use ===
 
 PUSHREG BX
-PUSH 5
+PUSH 4
 ADD
 POPREG FX
 PUSHM [FX]
@@ -754,7 +761,7 @@ OUT
 ; === var x2 use ===
 
 PUSHREG BX
-PUSH 6
+PUSH 5
 ADD
 POPREG FX
 PUSHM [FX]
@@ -776,7 +783,11 @@ PUSHREG AX
 PUSH 1
 SUB
 POPREG AX
-PUSHM [AX]
+PUSHREG AX
+PUSH 1
+SUB
+POPREG FX
+PUSHM [FX]
 POPREG BX
 
 ; ===== area exited =====

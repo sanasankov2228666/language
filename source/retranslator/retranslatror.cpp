@@ -2,7 +2,7 @@
 #include "lexems.h"
 #include "treereader.h"
 #include "config.h"
-#include "retranslator.h"
+#include "source/retranslator/retranslator.h"
 
 static int scope = 0;
 
