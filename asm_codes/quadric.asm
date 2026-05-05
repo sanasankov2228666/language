@@ -129,7 +129,7 @@ POPM [AX]
 ; ========= init func var par1 =========
 
 PUSHREG BX
-PUSH 0
+PUSH 3
 ADD
 POPREG FX
 POPM [FX]
@@ -143,7 +143,7 @@ POPM [AX]
 ; ========= init func var par2 =========
 
 PUSHREG BX
-PUSH 1
+PUSH 4
 ADD
 POPREG FX
 POPM [FX]
@@ -157,7 +157,7 @@ POPM [AX]
 ; ========= init func var par3 =========
 
 PUSHREG BX
-PUSH 2
+PUSH 5
 ADD
 POPREG FX
 POPM [FX]
@@ -173,7 +173,7 @@ POPM [AX]
 ; === var par2 use ===
 
 PUSHREG BX
-PUSH 1
+PUSH 4
 ADD
 POPREG FX
 PUSHM [FX]
@@ -183,7 +183,7 @@ PUSHM [FX]
 ; === var par2 use ===
 
 PUSHREG BX
-PUSH 1
+PUSH 4
 ADD
 POPREG FX
 PUSHM [FX]
@@ -195,7 +195,7 @@ PUSH 4
 ; === var par1 use ===
 
 PUSHREG BX
-PUSH 0
+PUSH 3
 ADD
 POPREG FX
 PUSHM [FX]
@@ -206,7 +206,7 @@ MULT
 ; === var par3 use ===
 
 PUSHREG BX
-PUSH 2
+PUSH 5
 ADD
 POPREG FX
 PUSHM [FX]
@@ -216,7 +216,7 @@ MULT
 SUB
 
 PUSHREG BX
-PUSH 3
+PUSH 6
 ADD
 POPREG FX
 POPM [FX]
@@ -230,7 +230,7 @@ POPM [AX]
 ; === var discr use ===
 
 PUSHREG BX
-PUSH 3
+PUSH 6
 ADD
 POPREG FX
 PUSHM [FX]
@@ -275,7 +275,7 @@ POPM [AX]
 ; ========= init func var a =========
 
 PUSHREG BX
-PUSH 0
+PUSH 3
 ADD
 POPREG FX
 POPM [FX]
@@ -289,7 +289,7 @@ POPM [AX]
 ; ========= init func var b =========
 
 PUSHREG BX
-PUSH 1
+PUSH 4
 ADD
 POPREG FX
 POPM [FX]
@@ -303,7 +303,7 @@ POPM [AX]
 ; ========= init func var c =========
 
 PUSHREG BX
-PUSH 2
+PUSH 5
 ADD
 POPREG FX
 POPM [FX]
@@ -319,7 +319,7 @@ POPM [AX]
 ; === var a use ===
 
 PUSHREG BX
-PUSH 0
+PUSH 3
 ADD
 POPREG FX
 PUSHM [FX]
@@ -344,7 +344,7 @@ JE :endif0
 ; === var b use ===
 
 PUSHREG BX
-PUSH 1
+PUSH 4
 ADD
 POPREG FX
 PUSHM [FX]
@@ -369,7 +369,7 @@ JE :else1
 ; === var c use ===
 
 PUSHREG BX
-PUSH 2
+PUSH 5
 ADD
 POPREG FX
 PUSHM [FX]
@@ -415,7 +415,7 @@ PUSH 0
 ; === var c use ===
 
 PUSHREG BX
-PUSH 2
+PUSH 5
 ADD
 POPREG FX
 PUSHM [FX]
@@ -426,7 +426,7 @@ SUB
 ; === var b use ===
 
 PUSHREG BX
-PUSH 1
+PUSH 4
 ADD
 POPREG FX
 PUSHM [FX]
@@ -453,7 +453,7 @@ JUMP :endif0
 ; === var c use ===
 
 PUSHREG BX
-PUSH 2
+PUSH 5
 ADD
 POPREG FX
 PUSHM [FX]
@@ -463,7 +463,7 @@ PUSHM [FX]
 ; === var b use ===
 
 PUSHREG BX
-PUSH 1
+PUSH 4
 ADD
 POPREG FX
 PUSHM [FX]
@@ -473,7 +473,7 @@ PUSHM [FX]
 ; === var a use ===
 
 PUSHREG BX
-PUSH 0
+PUSH 3
 ADD
 POPREG FX
 PUSHM [FX]
@@ -486,7 +486,7 @@ CALL :discr
 ; ===== end call =====
 
 PUSHREG BX
-PUSH 3
+PUSH 6
 ADD
 POPREG FX
 POPM [FX]
@@ -502,7 +502,7 @@ POPM [AX]
 ; === var D use ===
 
 PUSHREG BX
-PUSH 3
+PUSH 6
 ADD
 POPREG FX
 PUSHM [FX]
@@ -539,7 +539,7 @@ JUMP :endif3
 ; === var D use ===
 
 PUSHREG BX
-PUSH 3
+PUSH 6
 ADD
 POPREG FX
 PUSHM [FX]
@@ -566,7 +566,7 @@ PUSH 0
 ; === var b use ===
 
 PUSHREG BX
-PUSH 1
+PUSH 4
 ADD
 POPREG FX
 PUSHM [FX]
@@ -578,7 +578,7 @@ PUSH 2
 ; === var a use ===
 
 PUSHREG BX
-PUSH 0
+PUSH 3
 ADD
 POPREG FX
 PUSHM [FX]
@@ -588,7 +588,7 @@ MULT
 DIV
 
 PUSHREG BX
-PUSH 4
+PUSH 7
 ADD
 POPREG FX
 POPM [FX]
@@ -602,7 +602,7 @@ POPM [AX]
 ; === var x use ===
 
 PUSHREG BX
-PUSH 4
+PUSH 7
 ADD
 POPREG FX
 PUSHM [FX]
@@ -622,7 +622,7 @@ JUMP :endif4
 ; === var D use ===
 
 PUSHREG BX
-PUSH 3
+PUSH 6
 ADD
 POPREG FX
 PUSHM [FX]
@@ -649,7 +649,7 @@ PUSH 0
 ; === var b use ===
 
 PUSHREG BX
-PUSH 1
+PUSH 4
 ADD
 POPREG FX
 PUSHM [FX]
@@ -660,7 +660,7 @@ SUB
 ; === var D use ===
 
 PUSHREG BX
-PUSH 3
+PUSH 6
 ADD
 POPREG FX
 PUSHM [FX]
@@ -673,7 +673,7 @@ PUSH 2
 ; === var a use ===
 
 PUSHREG BX
-PUSH 0
+PUSH 3
 ADD
 POPREG FX
 PUSHM [FX]
@@ -683,7 +683,7 @@ MULT
 DIV
 
 PUSHREG BX
-PUSH 4
+PUSH 7
 ADD
 POPREG FX
 POPM [FX]
@@ -701,7 +701,7 @@ PUSH 0
 ; === var b use ===
 
 PUSHREG BX
-PUSH 1
+PUSH 4
 ADD
 POPREG FX
 PUSHM [FX]
@@ -712,7 +712,7 @@ SUB
 ; === var D use ===
 
 PUSHREG BX
-PUSH 3
+PUSH 6
 ADD
 POPREG FX
 PUSHM [FX]
@@ -725,7 +725,7 @@ PUSH 2
 ; === var a use ===
 
 PUSHREG BX
-PUSH 0
+PUSH 3
 ADD
 POPREG FX
 PUSHM [FX]
@@ -735,7 +735,7 @@ MULT
 DIV
 
 PUSHREG BX
-PUSH 5
+PUSH 8
 ADD
 POPREG FX
 POPM [FX]
@@ -749,7 +749,7 @@ POPM [AX]
 ; === var x1 use ===
 
 PUSHREG BX
-PUSH 4
+PUSH 7
 ADD
 POPREG FX
 PUSHM [FX]
@@ -761,7 +761,7 @@ OUT
 ; === var x2 use ===
 
 PUSHREG BX
-PUSH 5
+PUSH 8
 ADD
 POPREG FX
 PUSHM [FX]

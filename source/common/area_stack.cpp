@@ -223,12 +223,13 @@ int init_var (stack_scopes* stack, char* name)
     }
     else
     {
+        if (stack->search_index == 0)
+            offset += (int) stack->global.var_count;
+
         cur_scope = &stack->scopes[stack->cur_scope];
         
         for (size_t i = stack->search_index; i <= stack->cur_scope; i++)
-        {
             offset += (int) stack->scopes[i].var_count;
-        }
     }
 
     if (cur_scope->var_count >= cur_scope->var_capacity)
@@ -243,7 +244,6 @@ int init_var (stack_scopes* stack, char* name)
     cur_var->area   = (int) cur_scope->area_type;
 
     cur_scope->var_count++;
-    
     return offset;
 }
 
